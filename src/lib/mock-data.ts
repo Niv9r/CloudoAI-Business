@@ -1,4 +1,5 @@
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift } from './types';
+
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder } from './types';
 
 type MockDb = {
   products: Record<string, Product[]>;
@@ -9,6 +10,7 @@ type MockDb = {
   purchaseOrders: Record<string, PurchaseOrder[]>;
   stockAdjustments: Record<string, StockAdjustment[]>;
   shifts: Record<string, Shift[]>;
+  wholesaleOrders: Record<string, WholesaleOrder[]>;
 }
 
 export const mockDb: MockDb = {
@@ -34,6 +36,7 @@ export const mockDb: MockDb = {
     biz_1: [
       { id: "CUST001", type: "individual", firstName: "Alice", lastName: "Johnson", companyName: null, email: "alice.j@email.com", phone: "555-0101", loyaltyPoints: 150, },
       { id: "CUST002", type: "individual", firstName: "Bob", lastName: "Williams", companyName: null, email: "bob.w@email.com", phone: "555-0102", loyaltyPoints: 75, },
+      { id: "CUST003", type: "company", firstName: "Corporate", lastName: "Client", companyName: "Innovate Inc.", email: "contact@innovate.com", phone: "555-0105", loyaltyPoints: 0, },
     ],
     biz_2: [
       { id: "CUST101", type: "company", firstName: "Charlie", lastName: "Brown", companyName: "Brown Enterprises", email: "charlie@brownenterprises.com", phone: "555-0103", },
@@ -95,5 +98,13 @@ export const mockDb: MockDb = {
       { id: 'SHIFT-2024-05-29-B2', employeeId: 'Admin User', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'reconciled' },
     ],
     biz_3: []
+  },
+  wholesaleOrders: {
+    biz_1: [
+        { id: 'WO-2024-001', customerId: 'CUST003', orderDate: '2024-05-25T00:00:00Z', paymentTerms: 'Net 30', shippingAddress: '123 Innovation Dr, Tech City, USA', shippingCost: 50, subtotal: 900, total: 950, status: 'Awaiting Fulfillment', lineItems: [{ productId: 'PROD002', quantity: 20, unitPrice: 45.00, quantityShipped: 0 }], notes: 'Priority shipment requested' },
+        { id: 'WO-2024-002', customerId: 'CUST003', orderDate: '2024-05-30T00:00:00Z', paymentTerms: 'Due on receipt', shippingAddress: '123 Innovation Dr, Tech City, USA', shippingCost: 20, subtotal: 300, total: 320, status: 'Draft', lineItems: [{ productId: 'PROD001', quantity: 20, unitPrice: 15.00, quantityShipped: 0 }], notes: '' },
+    ],
+    biz_2: [],
+    biz_3: [],
   }
 };

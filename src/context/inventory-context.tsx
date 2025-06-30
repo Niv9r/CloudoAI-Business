@@ -1,7 +1,8 @@
+
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
-import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift, SaleLineItem } from '@/lib/types';
+import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift, SaleLineItem, WholesaleOrder, WholesaleOrderFormValues, WholesaleOrderLineItem } from '@/lib/types';
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ interface InventoryContextType {
   getSales: (businessId: string) => Sale[];
   getExpenses: (businessId: string) => Expense[];
   getShifts: (businessId: string) => Shift[];
+  getWholesaleOrders: (businessId: string) => WholesaleOrder[];
   
   addProduct: (businessId: string, data: ProductFormValues) => void;
   updateProduct: (businessId: string, product: Product) => void;
@@ -41,6 +43,13 @@ interface InventoryContextType {
   addVendor: (businessId: string, data: VendorFormValues) => void;
   updateVendor: (businessId: string, vendor: Vendor) => void;
   deleteVendor: (businessId: string, vendorId: string) => void;
+
+  addWholesaleOrder: (businessId: string, data: WholesaleOrderFormValues) => void;
+  updateWholesaleOrder: (businessId: string, order: WholesaleOrder) => void;
+  confirmWholesaleOrder: (businessId: string, orderId: string) => void;
+  markWholesaleOrderPaid: (businessId: string, orderId: string) => void;
+  shipWholesaleOrder: (businessId: string, orderId: string, shippedItems: { productId: string; quantityShipped: number }[]) => void;
+  cancelWholesaleOrder: (businessId: string, orderId: string) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -62,6 +71,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const getSales = useCallback((businessId: string) => db.sales[businessId] || [], [db.sales]);
   const getExpenses = useCallback((businessId: string) => db.expenses[businessId] || [], [db.expenses]);
   const getShifts = useCallback((businessId: string) => db.shifts[businessId] || [], [db.shifts]);
+  const getWholesaleOrders = useCallback((businessId: string) => db.wholesaleOrders[businessId] || [], [db.wholesaleOrders]);
 
   const addProduct = useCallback((businessId: string, data: ProductFormValues) => {
     const newProduct: Product = {
@@ -506,6 +516,118 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           });
       }
   }, [db.vendors, toast]);
+  
+  // Wholesale Order Management
+  const addWholesaleOrder = useCallback((businessId: string, data: WholesaleOrderFormValues) => {
+    const subtotal = data.lineItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+    const total = subtotal + data.shippingCost;
+    const newOrder: WholesaleOrder = {
+        id: `WO-${Date.now()}`,
+        ...data,
+        orderDate: data.orderDate.toISOString(),
+        lineItems: data.lineItems.map(li => ({...li, quantityShipped: 0 })),
+        subtotal,
+        total,
+        status: 'Draft',
+    };
+    setDb(prevDb => ({
+        ...prevDb,
+        wholesaleOrders: {
+            ...prevDb.wholesaleOrders,
+            [businessId]: [newOrder, ...(prevDb.wholesaleOrders[businessId] || [])]
+        }
+    }));
+    toast({ title: "Success", description: "Draft Wholesale Order created." });
+  }, [toast]);
+
+  const updateWholesaleOrder = useCallback((businessId: string, updatedOrder: WholesaleOrder) => {
+    const subtotal = updatedOrder.lineItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+    const total = subtotal + updatedOrder.shippingCost;
+    setDb(prevDb => ({
+        ...prevDb,
+        wholesaleOrders: {
+            ...prevDb.wholesaleOrders,
+            [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === updatedOrder.id ? {...updatedOrder, subtotal, total} : o)
+        }
+    }));
+    toast({ title: "Success", description: `Draft Order ${updatedOrder.id} updated.` });
+  }, [toast]);
+
+  const confirmWholesaleOrder = useCallback((businessId: string, orderId: string) => {
+    setDb(prevDb => ({
+        ...prevDb,
+        wholesaleOrders: {
+            ...prevDb.wholesaleOrders,
+            [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Awaiting Payment' } : o)
+        }
+    }));
+    toast({ title: "Order Confirmed", description: `Order ${orderId} is now awaiting payment.` });
+  }, [toast]);
+
+  const markWholesaleOrderPaid = useCallback((businessId: string, orderId: string) => {
+    setDb(prevDb => ({
+        ...prevDb,
+        wholesaleOrders: {
+            ...prevDb.wholesaleOrders,
+            [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Awaiting Fulfillment' } : o)
+        }
+    }));
+    toast({ title: "Payment Received", description: `Order ${orderId} is now awaiting fulfillment.` });
+  }, [toast]);
+
+  const cancelWholesaleOrder = useCallback((businessId: string, orderId: string) => {
+    setDb(prevDb => ({
+        ...prevDb,
+        wholesaleOrders: {
+            ...prevDb.wholesaleOrders,
+            [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o)
+        }
+    }));
+    toast({ variant: 'destructive', title: "Order Cancelled", description: `Wholesale Order ${orderId} has been cancelled.` });
+  }, [toast]);
+
+  const shipWholesaleOrder = useCallback((businessId: string, orderId: string, shippedItems: { productId: string; quantityShipped: number }[]) => {
+    setDb(prevDb => {
+        const newDb = {...prevDb};
+        
+        // Update Order
+        const orderToUpdate = (newDb.wholesaleOrders[businessId] || []).find(o => o.id === orderId);
+        if (orderToUpdate) {
+            const updatedLineItems = orderToUpdate.lineItems.map(li => {
+                const shippedItem = shippedItems.find(si => si.productId === li.productId);
+                return shippedItem ? { ...li, quantityShipped: (li.quantityShipped || 0) + shippedItem.quantityShipped } : li;
+            });
+
+            const isFullyShipped = updatedLineItems.every(li => (li.quantityShipped || 0) >= li.quantity);
+            
+            const updatedOrder: WholesaleOrder = {
+                ...orderToUpdate,
+                lineItems: updatedLineItems,
+                status: isFullyShipped ? 'Completed' : 'Shipped' // Could also be 'Partially Shipped'
+            };
+            newDb.wholesaleOrders[businessId] = (newDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? updatedOrder : o);
+        }
+
+        // Update Product Stock
+        const businessProducts = newDb.products[businessId] || [];
+        newDb.products[businessId] = businessProducts.map(prod => {
+            const shippedItem = shippedItems.find(si => si.productId === prod.id);
+            if (shippedItem) {
+                const newStock = prod.stock - shippedItem.quantityShipped;
+                return {
+                    ...prod,
+                    stock: newStock,
+                    status: getStatusFromStock(newStock)
+                };
+            }
+            return prod;
+        });
+        
+        return newDb;
+    });
+    
+    toast({ title: "Items Shipped", description: "Inventory has been updated and order status changed." });
+  }, [toast]);
 
 
   const value = useMemo(() => ({
@@ -516,6 +638,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     getSales,
     getExpenses,
     getShifts,
+    getWholesaleOrders,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -536,11 +659,18 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     addVendor,
     updateVendor,
     deleteVendor,
+    addWholesaleOrder,
+    updateWholesaleOrder,
+    confirmWholesaleOrder,
+    markWholesaleOrderPaid,
+    shipWholesaleOrder,
+    cancelWholesaleOrder,
   }), [
-    getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts,
+    getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts, getWholesaleOrders,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
     addSale, processRefund, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
-    addVendor, updateVendor, deleteVendor
+    addVendor, updateVendor, deleteVendor,
+    addWholesaleOrder, updateWholesaleOrder, confirmWholesaleOrder, markWholesaleOrderPaid, shipWholesaleOrder, cancelWholesaleOrder,
   ]);
 
   return (

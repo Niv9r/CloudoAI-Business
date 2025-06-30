@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export type Business = {
@@ -207,6 +208,51 @@ export type StockAdjustment = {
     notes: string;
     employee: string; // User who made the adjustment
 };
+
+// Types for B2B/Wholesale Module
+
+export const paymentTermsTypes = ['Due on receipt', 'Net 15', 'Net 30', 'Net 60'] as const;
+const paymentTermsEnum = z.enum(paymentTermsTypes);
+export type PaymentTerms = z.infer<typeof paymentTermsEnum>;
+
+export const wholesaleOrderLineItemSchema = z.object({
+  productId: z.string().min(1, 'Product is required.'),
+  quantity: z.coerce.number().int().min(1, 'Quantity must be at least 1.'),
+  unitPrice: z.coerce.number().min(0, 'Price must be a positive number.'),
+});
+
+export const wholesaleOrderFormSchema = z.object({
+  customerId: z.string().min(1, 'Please select a customer.'),
+  orderDate: z.date({ required_error: 'Order date is required.' }),
+  paymentTerms: paymentTermsEnum,
+  shippingAddress: z.string().min(10, 'Shipping address is required.'),
+  shippingCost: z.coerce.number().min(0, 'Shipping cost must be a positive number.').default(0),
+  lineItems: z.array(wholesaleOrderLineItemSchema).min(1, 'At least one line item is required.'),
+  notes: z.string().optional(),
+});
+export type WholesaleOrderFormValues = z.infer<typeof wholesaleOrderFormSchema>;
+
+export type WholesaleOrderLineItem = {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    quantityShipped?: number;
+};
+
+export type WholesaleOrder = {
+    id: string;
+    customerId: string;
+    orderDate: string; // ISO String
+    paymentTerms: PaymentTerms;
+    shippingAddress: string;
+    shippingCost: number;
+    lineItems: WholesaleOrderLineItem[];
+    subtotal: number;
+    total: number;
+    status: 'Draft' | 'Awaiting Payment' | 'Awaiting Fulfillment' | 'Shipped' | 'Completed' | 'Cancelled';
+    notes?: string;
+};
+
 
 // New Types for AI Features
 
