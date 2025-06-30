@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import type { CartItem, Product, Customer, Discount } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import type { CartItem, Product, Customer, Discount, HeldOrder } from '@/lib/types';
 import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
 import { products as allProducts } from '@/lib/mock-data';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Archive } from 'lucide-react';
 import ChargeDialog from '@/components/pos/charge-dialog';
 import CustomerSearchDialog from '@/components/pos/customer-search-dialog';
+import HeldOrdersDialog from '@/components/pos/held-orders-dialog';
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -15,6 +18,9 @@ export default function PosPage() {
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [discount, setDiscount] = useState<Discount | null>(null);
+
+  const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([]);
+  const [isHeldOrdersOpen, setIsHeldOrdersOpen] = useState(false);
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -30,7 +36,6 @@ export default function PosPage() {
 
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      // Remove item if quantity is 0 or less
       setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
     } else {
       setCart((prevCart) =>
@@ -75,13 +80,71 @@ export default function PosPage() {
     setIsChargeModalOpen(false);
   }
 
+  const { total } = useMemo(() => {
+    const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const discountAmount = (() => {
+        if (!discount) return 0;
+        if (discount.type === 'fixed') {
+            return Math.min(discount.value, subtotal);
+        }
+        if (discount.type === 'percentage') {
+            return subtotal * (discount.value / 100);
+        }
+        return 0;
+    })();
+    const subtotalAfterDiscount = subtotal - discountAmount;
+    const taxRate = 0.1;
+    const taxAmount = subtotalAfterDiscount * taxRate;
+    const total = subtotalAfterDiscount + taxAmount;
+    return { total };
+  }, [cart, discount]);
+  
+  const handleHoldSale = () => {
+    if (cart.length === 0) return;
+
+    const newHeldOrder: HeldOrder = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      cart,
+      customer: selectedCustomer,
+      discount,
+      total,
+    };
+
+    setHeldOrders(prev => [...prev, newHeldOrder]);
+    handleClearSale();
+  };
+
+  const handleRetrieveOrder = (orderId: string) => {
+    const orderToRetrieve = heldOrders.find(order => order.id === orderId);
+    if (orderToRetrieve) {
+      setCart(orderToRetrieve.cart);
+      setSelectedCustomer(orderToRetrieve.customer);
+      setDiscount(orderToRetrieve.discount);
+      setHeldOrders(prev => prev.filter(order => order.id !== orderId));
+      setIsHeldOrdersOpen(false);
+    }
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    setHeldOrders(prev => prev.filter(order => order.id !== orderId));
+  };
+
+
   return (
     <>
       <div className="h-[calc(100vh-4rem-1px)] -m-4 sm:-m-6 md:-m-8">
           <div className="grid grid-cols-12 gap-6 h-full p-6">
               <div className="col-span-12 lg:col-span-7 xl:col-span-8 h-full">
                   <Card className='h-full flex flex-col'>
-                      <CardContent className='p-4 flex-1'>
+                      <CardHeader className="flex-row items-center justify-between pb-4">
+                        <CardTitle>Products</CardTitle>
+                        <Button variant="outline" onClick={() => setIsHeldOrdersOpen(true)}>
+                            <Archive className="mr-2 h-4 w-4" />
+                            View Held Sales ({heldOrders.length})
+                        </Button>
+                      </CardHeader>
+                      <CardContent className='p-4 pt-0 flex-1'>
                           <ProductGrid products={allProducts} onAddToCart={handleAddToCart} />
                       </CardContent>
                   </Card>
@@ -98,6 +161,7 @@ export default function PosPage() {
                       onSelectCustomerClick={() => setIsCustomerSearchOpen(true)}
                       onApplyDiscount={handleApplyDiscount}
                       onRemoveDiscount={handleRemoveDiscount}
+                      onHoldSale={handleHoldSale}
                   />
               </div>
           </div>
@@ -113,6 +177,13 @@ export default function PosPage() {
         isOpen={isCustomerSearchOpen}
         onOpenChange={setIsCustomerSearchOpen}
         onSelectCustomer={handleSelectCustomer}
+      />
+      <HeldOrdersDialog
+        isOpen={isHeldOrdersOpen}
+        onOpenChange={setIsHeldOrdersOpen}
+        heldOrders={heldOrders}
+        onRetrieveOrder={handleRetrieveOrder}
+        onDeleteOrder={handleDeleteOrder}
       />
     </>
   );

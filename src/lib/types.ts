@@ -27,3 +27,12 @@ export type Discount = {
     type: 'percentage' | 'fixed';
     value: number;
 };
+
+export type HeldOrder = {
+  id: string;
+  timestamp: string;
+  cart: CartItem[];
+  customer: Customer | null;
+  discount: Discount | null;
+  total: number;
+};

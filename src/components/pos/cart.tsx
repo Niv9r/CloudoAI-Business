@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Minus, Plus, Trash2, X, User, Tag, Ticket, UserPlus } from 'lucide-react';
+import { Minus, Plus, Trash2, X, User, Tag, Ticket, UserPlus, Archive } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Label } from '../ui/label';
 import { useMemo, useState } from 'react';
@@ -22,6 +22,7 @@ interface CartProps {
   onSelectCustomerClick: () => void;
   onApplyDiscount: (discount: Discount) => void;
   onRemoveDiscount: () => void;
+  onHoldSale: () => void;
 }
 
 function DiscountPopover({ onApplyDiscount }: { onApplyDiscount: (discount: Discount) => void }) {
@@ -77,7 +78,7 @@ function DiscountPopover({ onApplyDiscount }: { onApplyDiscount: (discount: Disc
     );
 }
 
-export default function Cart({ cart, customer, discount, onUpdateQuantity, onRemoveItem, onClearCart, onCharge, onSelectCustomerClick, onApplyDiscount, onRemoveDiscount }: CartProps) {
+export default function Cart({ cart, customer, discount, onUpdateQuantity, onRemoveItem, onClearCart, onCharge, onSelectCustomerClick, onApplyDiscount, onRemoveDiscount, onHoldSale }: CartProps) {
   const subtotal = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
 
   const discountAmount = useMemo(() => {
@@ -194,7 +195,10 @@ export default function Cart({ cart, customer, discount, onUpdateQuantity, onRem
           </div>
           
           <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button variant="outline" disabled={cart.length === 0}>Save Sale</Button>
+              <Button variant="outline" disabled={cart.length === 0} onClick={onHoldSale}>
+                <Archive className="mr-2 h-4 w-4" />
+                Hold Sale
+              </Button>
               <Button size="lg" onClick={onCharge} disabled={cart.length === 0}>Charge</Button>
           </div>
       </CardFooter>
