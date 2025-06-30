@@ -34,7 +34,7 @@ export default function AppSidebar() {
     { href: '/inventory', label: 'Inventory', icon: Package },
     { href: '#', label: 'Reports', icon: BarChart3 },
     { href: '#', label: 'Customers', icon: Users },
-    { href: '#', label: 'Expenses', icon: CreditCard },
+    { href: '/expenses', label: 'Expenses', icon: CreditCard },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

@@ -86,3 +86,45 @@ export type Shift = {
     actualCashTotal?: number;
     status: 'open' | 'closed' | 'reconciled';
 };
+
+export type Vendor = {
+  id: string;
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+};
+
+export const expenseLineItemSchema = z.object({
+  description: z.string().min(1, 'Description is required.'),
+  amount: z.coerce.number().min(0.01, 'Amount must be greater than 0.'),
+});
+
+export const expenseFormSchema = z.object({
+  vendorId: z.string().min(1, 'Please select a vendor.'),
+  invoiceNumber: z.string().optional(),
+  issueDate: z.date({ required_error: 'Issue date is required.'}),
+  dueDate: z.date({ required_error: 'Due date is required.'}),
+  lineItems: z.array(expenseLineItemSchema).min(1, { message: 'At least one line item is required.'}),
+  notes: z.string().optional(),
+});
+
+export type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+
+export type ExpenseLineItem = {
+  id: string;
+  description: string;
+  amount: number;
+}
+
+export type Expense = {
+  id: string;
+  vendorId: string;
+  invoiceNumber?: string;
+  issueDate: string; // ISO string
+  dueDate: string; // ISO string
+  lineItems: ExpenseLineItem[];
+  total: number;
+  status: 'Draft' | 'Pending' | 'Paid' | 'Overdue';
+  notes?: string;
+};

@@ -1,4 +1,4 @@
-import type { Product, Customer, Sale } from './types';
+import type { Product, Customer, Sale, Vendor, Expense } from './types';
 
 export const products: Product[] = [
   {
@@ -224,4 +224,65 @@ export const sales: Sale[] = [
         { productId: "PROD001", name: "Artisan Coffee Beans", quantity: 2, unitPrice: 15.99, subtotal: 31.98 }
     ],
   },
+];
+
+export const vendors: Vendor[] = [
+  { id: 'VEND001', name: 'Office Supplies Inc.', contactPerson: 'John Smith', email: 'sales@officesupplies.com', phone: '555-0201' },
+  { id: 'VEND002', name: 'Digital Services LLC', contactPerson: 'Jane Doe', email: 'accounts@digitalservices.com', phone: '555-0202' },
+  { id: 'VEND003', name: 'Creative Marketing Agency', contactPerson: 'Mike Ross', email: 'billing@creative.co', phone: '555-0203' },
+  { id: 'VEND004', name: 'Bean Roasters United', contactPerson: 'Sarah Jenkins', email: 'orders@beanroasters.com', phone: '555-0204' },
+];
+
+export const expenses: Expense[] = [
+    {
+        id: 'EXP001',
+        vendorId: 'VEND001',
+        invoiceNumber: 'INV-OS-5829',
+        issueDate: '2024-05-15T00:00:00Z',
+        dueDate: '2024-06-14T00:00:00Z',
+        lineItems: [
+            { id: 'LI-1', description: 'Printer Paper (5 reams)', amount: 25.00 },
+            { id: 'LI-2', description: 'Toner Cartridge', amount: 75.50 },
+        ],
+        total: 100.50,
+        status: 'Paid',
+        notes: 'Paid via CC on 2024-05-20'
+    },
+    {
+        id: 'EXP002',
+        vendorId: 'VEND002',
+        invoiceNumber: 'INV-DS-1050',
+        issueDate: '2024-05-20T00:00:00Z',
+        dueDate: '2024-06-19T00:00:00Z',
+        lineItems: [
+            { id: 'LI-3', description: 'Monthly Cloud Hosting', amount: 50.00 },
+            { id: 'LI-4', description: 'Domain Renewal (.com)', amount: 15.00 },
+        ],
+        total: 65.00,
+        status: 'Pending',
+    },
+    {
+        id: 'EXP003',
+        vendorId: 'VEND003',
+        invoiceNumber: 'INV-CM-042',
+        issueDate: '2024-04-30T00:00:00Z',
+        dueDate: '2024-05-30T00:00:00Z',
+        lineItems: [
+            { id: 'LI-5', description: 'Q2 Social Media Campaign', amount: 500.00 },
+        ],
+        total: 500.00,
+        status: 'Overdue',
+    },
+    {
+        id: 'EXP004',
+        vendorId: 'VEND004',
+        invoiceNumber: 'INV-BRU-9821',
+        issueDate: '2024-05-25T00:00:00Z',
+        dueDate: '2024-06-09T00:00:00Z',
+        lineItems: [
+            { id: 'LI-6', description: 'Specialty Coffee Beans (10kg)', amount: 250.00 },
+        ],
+        total: 250.00,
+        status: 'Pending',
+    },
 ];
