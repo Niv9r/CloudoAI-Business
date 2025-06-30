@@ -62,7 +62,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     addBusiness,
     updateBusiness,
     deleteBusiness
-  }), [businesses, selectedBusiness, addBusiness, updateBusiness, deleteBusiness, setSelectedBusiness]);
+  }), [businesses, selectedBusiness, addBusiness, updateBusiness, deleteBusiness]);
 
   return (
     <BusinessContext.Provider value={value}>

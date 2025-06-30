@@ -62,7 +62,7 @@ export default function ManageBusinessesCard() {
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                    className="text-destructive focus:text-destructive"
                                     onSelect={(e) => e.preventDefault()}
                                     >
                                     <Trash2 className="mr-2 h-4 w-4" />
