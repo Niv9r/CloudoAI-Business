@@ -23,6 +23,7 @@ import {
   Tablet,
   ClipboardList,
   ClipboardPlus,
+  Lightbulb,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -33,6 +34,7 @@ export default function AppSidebar() {
 
   const menuItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/insights', label: 'Insights', icon: Lightbulb },
     { href: '/pos', label: 'POS', icon: Tablet },
     { href: '/sales', label: 'Sales', icon: ShoppingCart },
     { href: '/inventory', label: 'Inventory', icon: Package },
