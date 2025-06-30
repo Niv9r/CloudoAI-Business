@@ -5,7 +5,7 @@ import {
   Store,
   ChevronsUpDown,
   Check,
-  PlusCircle
+  Settings
 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useBusiness } from '@/context/business-context';
+import Link from 'next/link';
 
 
 export default function AppHeader() {
@@ -50,10 +51,12 @@ export default function AppHeader() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                <span>Create Business</span>
-              </DropdownMenuItem>
+               <Link href="/settings" passHref>
+                <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Manage Businesses</span>
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuContent>
           </DropdownMenu>
 

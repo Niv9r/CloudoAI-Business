@@ -1,6 +1,10 @@
 export type Business = {
     id: string;
     name: string;
+    legalName: string;
+    address: string;
+    phone: string;
+    email: string;
     timezone: string;
 };
 
@@ -19,7 +23,7 @@ export type CartItem = Product & {
 };
 
 export type Customer = {
-    id: string;
+    id:string;
     type: 'individual' | 'company';
     firstName: string;
     lastName: string;
