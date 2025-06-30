@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import {
   Sidebar,
   SidebarHeader,
@@ -8,48 +9,88 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import {
-  BarChart3,
-  CreditCard,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Landmark,
   LayoutDashboard,
   Package,
   Palette,
   Settings,
   ShoppingCart,
-  Users,
   Tablet,
-  ClipboardList,
-  ClipboardPlus,
   Lightbulb,
-  Clock,
-  Building2,
-  Landmark,
+  ChevronRight,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+const navConfig = [
+  { type: 'link' as const, href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { type: 'link' as const, href: '/insights', label: 'Insights', icon: Lightbulb },
+  { type: 'link' as const, href: '/pos', label: 'POS', icon: Tablet },
+  {
+    type: 'group' as const,
+    label: 'Sales',
+    icon: ShoppingCart,
+    subItems: [
+      { href: '/sales', label: 'Sales Log' },
+      { href: '/wholesale', label: 'Wholesale' },
+      { href: '/shifts', label: 'Shifts' },
+      { href: '/customers', label: 'Customers' },
+    ],
+  },
+  {
+    type: 'group' as const,
+    label: 'Inventory',
+    icon: Package,
+    subItems: [
+      { href: '/inventory', label: 'Products' },
+      { href: '/purchase-orders', label: 'Purchase Orders' },
+      { href: '/stock-adjustments', label: 'Stock Adjustments' },
+      { href: '/vendors', label: 'Vendors' },
+    ],
+  },
+   {
+    type: 'group' as const,
+    label: 'Finance',
+    icon: Landmark,
+    subItems: [
+      { href: '/expenses', label: 'Expenses' },
+      { href: '/reports', label: 'Reports' },
+    ],
+  },
+  { type: 'link' as const, href: '/settings', label: 'Settings', icon: Settings },
+];
+
+
 export default function AppSidebar() {
   const pathname = usePathname();
 
-  const menuItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/insights', label: 'Insights', icon: Lightbulb },
-    { href: '/pos', label: 'POS', icon: Tablet },
-    { href: '/sales', label: 'Sales', icon: ShoppingCart },
-    { href: '/wholesale', label: 'Wholesale', icon: Landmark },
-    { href: '/shifts', label: 'Shifts', icon: Clock },
-    { href: '/inventory', label: 'Inventory', icon: Package },
-    { href: '/stock-adjustments', label: 'Stock Adjustments', icon: ClipboardPlus },
-    { href: '/purchase-orders', label: 'Purchase Orders', icon: ClipboardList },
-    { href: '/customers', label: 'Customers', icon: Users },
-    { href: '/vendors', label: 'Vendors', icon: Building2 },
-    { href: '/expenses', label: 'Expenses', icon: CreditCard },
-    { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '/settings', label: 'Settings', icon: Settings },
-  ];
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initialState: Record<string, boolean> = {};
+    navConfig.forEach(item => {
+        if (item.type === 'group') {
+            if (item.subItems.some(sub => pathname.startsWith(sub.href))) {
+                initialState[item.label] = true;
+            }
+        }
+    });
+    return initialState;
+  });
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -61,18 +102,47 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <Link href={item.href} passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={item.label}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
+          {navConfig.map((item) => (
+            item.type === 'link' ? (
+              <SidebarMenuItem key={item.href}>
+                <Link href={item.href} passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === item.href}
+                    tooltip={item.label}
+                  >
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            ) : (
+              <SidebarMenuItem key={item.label} className='group/collapsible'>
+                <Collapsible open={openGroups[item.label] || false} onOpenChange={() => toggleGroup(item.label)}>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={item.label} className="justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </div>
+                      <ChevronRight className={`h-4 w-4 transition-transform duration-200 group-data-[collapsible=icon]:hidden ${openGroups[item.label] ? 'rotate-90' : ''}`} />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                      <SidebarMenuSub>
+                          {item.subItems.map(subItem => (
+                              <SidebarMenuSubItem key={subItem.href}>
+                                  <Link href={subItem.href} passHref>
+                                      <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                                          {subItem.label}
+                                      </SidebarMenuSubButton>
+                                  </Link>
+                              </SidebarMenuSubItem>
+                          ))}
+                      </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
+            )
           ))}
         </SidebarMenu>
       </SidebarContent>
