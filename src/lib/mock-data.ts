@@ -152,6 +152,25 @@ export const customers: Customer[] = [
         email: "eva@greengoods.co",
         phone: "555-0105",
     },
+    {
+        id: 'CUST006',
+        type: 'individual',
+        firstName: 'Frank',
+        lastName: 'Davis',
+        companyName: null,
+        email: 'frank.d@email.com',
+        phone: '555-0106',
+        loyaltyPoints: 50
+    },
+    {
+        id: 'CUST007',
+        type: 'company',
+        firstName: 'Grace',
+        lastName: 'Taylor',
+        companyName: 'TaylorMade Solutions',
+        email: 'grace.t@taylormadesolutions.com',
+        phone: '555-0107'
+    },
 ];
 
 

@@ -6,8 +6,8 @@ import RecentSales from "@/components/dashboard/recent-sales";
 import SalesChart from "@/components/dashboard/sales-chart";
 import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
+import AiCopilot from '@/components/dashboard/ai-copilot';
 import { useBusiness } from '@/context/business-context';
-import type { Business } from '@/lib/types';
 import { DollarSign, ShoppingCart, Users, Wallet } from "lucide-react";
 
 const kpiData: Record<string, { title: string; value: string; change: string; icon: JSX.Element }[]> = {
@@ -41,10 +41,14 @@ export default function Home() {
   }, [selectedBusiness]);
 
   return (
-    <div className="flex h-full flex-col gap-8">
+    <div className="flex h-full w-full flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">{selectedBusiness.name} Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's a summary of your business.</p>
+      </div>
+
+      <div className="w-full">
+        <AiCopilot />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

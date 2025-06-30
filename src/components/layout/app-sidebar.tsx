@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -37,9 +38,9 @@ export default function AppSidebar() {
     { href: '/inventory', label: 'Inventory', icon: Package },
     { href: '/stock-adjustments', label: 'Stock Adjustments', icon: ClipboardPlus },
     { href: '/purchase-orders', label: 'Purchase Orders', icon: ClipboardList },
-    { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '#', 'label': 'Customers', icon: Users },
+    { href: '/customers', label: 'Customers', icon: Users },
     { href: '/expenses', label: 'Expenses', icon: CreditCard },
+    { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

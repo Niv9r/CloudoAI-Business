@@ -30,15 +30,19 @@ export type CartItem = Product & {
     quantity: number;
 };
 
-export type Customer = {
+export const customerSchema = z.object({
+    type: z.enum(['individual', 'company']),
+    firstName: z.string().min(1, 'First name is required.'),
+    lastName: z.string().min(1, 'Last name is required.'),
+    companyName: z.string().optional().nullable(),
+    email: z.string().email('Invalid email address.'),
+    phone: z.string().min(1, 'Phone number is required.'),
+    loyaltyPoints: z.number().int().optional(),
+});
+export type CustomerFormValues = z.infer<typeof customerSchema>;
+
+export type Customer = CustomerFormValues & {
     id:string;
-    type: 'individual' | 'company';
-    firstName: string;
-    lastName: string;
-    companyName: string | null;
-    email: string;
-    phone: string;
-    loyaltyPoints?: number;
 };
 
 export type Discount = {
@@ -186,4 +190,42 @@ export type StockAdjustment = {
     quantity: number; // can be positive or negative
     notes: string;
     employee: string; // User who made the adjustment
+};
+
+// New Types for AI Features
+
+export type AuditLog = {
+    id: string;
+    timestamp: string; // ISO String
+    userId: string;
+    action: string; // e.g., 'product.create', 'sale.void', 'user.login'
+    details: Record<string, any>; // Contextual details of the action
+};
+
+export type WebsitePageComponent = {
+    componentType: 'hero' | 'productList' | 'callToAction' | 'contentBlock';
+    contentSnippet: string;
+    linkedProductId?: string;
+    linkedCategoryId?: string;
+};
+
+export type WebsiteStructure = {
+    id: string; // pageId
+    businessId: string;
+    urlPath: string;
+    pageTitle: string;
+    contentSummary: string; // AI-generated summary
+    keywords: string[]; // AI-extracted keywords
+    lastUpdated: string; // ISO String
+    pageType: 'productPage' | 'homepage' | 'blogPost' | 'categoryPage';
+    components: WebsitePageComponent[];
+};
+
+export type BusinessKnowledgeBase = {
+    id: string;
+    businessId: string;
+    documentType: 'policy' | 'faq' | 'guide' | 'note';
+    title: string;
+    content: string;
+    embedding?: number[]; // Vector embedding for semantic search
 };
