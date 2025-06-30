@@ -75,3 +75,14 @@ export type Sale = {
   tax: number;
   discount: number;
 };
+
+export type Shift = {
+    id: string;
+    employeeId: string;
+    startTime: string;
+    endTime?: string;
+    startingCashFloat: number;
+    endingCashFloat?: number;
+    actualCashTotal?: number;
+    status: 'open' | 'closed' | 'reconciled';
+};

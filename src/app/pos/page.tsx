@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import type { CartItem, Product, Customer, Discount, HeldOrder } from '@/lib/types';
+import { useState, useMemo, useEffect } from 'react';
+import type { CartItem, Product, Customer, Discount, HeldOrder, Shift, Sale } from '@/lib/types';
 import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
-import { products as allProducts } from '@/lib/mock-data';
+import { products as allProducts, sales as mockSales } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Archive } from 'lucide-react';
+import { Archive, LogOut } from 'lucide-react';
 import ChargeDialog from '@/components/pos/charge-dialog';
 import CustomerSearchDialog from '@/components/pos/customer-search-dialog';
 import HeldOrdersDialog from '@/components/pos/held-orders-dialog';
+import ShiftManagementDialog from '@/components/pos/shift-management-dialog';
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -18,9 +19,21 @@ export default function PosPage() {
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [discount, setDiscount] = useState<Discount | null>(null);
-
   const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([]);
   const [isHeldOrdersOpen, setIsHeldOrdersOpen] = useState(false);
+
+  // --- Shift Management State ---
+  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
+  const [salesThisShift, setSalesThisShift] = useState<Sale[]>([]);
+  const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(true);
+
+  // Mock previous sales to show in shift summary
+  useEffect(() => {
+    if(currentShift) {
+        setSalesThisShift(mockSales.slice(0, 2));
+    }
+  }, [currentShift]);
+
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -75,7 +88,8 @@ export default function PosPage() {
       setDiscount(null);
   }
 
-  const handleNewSale = () => {
+  const handleSaleComplete = (newSale: Sale) => {
+    setSalesThisShift(prev => [...prev, newSale]);
     handleClearSale();
     setIsChargeModalOpen(false);
   }
@@ -129,6 +143,47 @@ export default function PosPage() {
   const handleDeleteOrder = (orderId: string) => {
     setHeldOrders(prev => prev.filter(order => order.id !== orderId));
   };
+  
+  // --- Shift Management Handlers ---
+  const handleStartShift = (startingFloat: number) => {
+    const newShift: Shift = {
+      id: `SHIFT-${Date.now()}`,
+      employeeId: 'Admin User', // Hardcoded for now
+      startTime: new Date().toISOString(),
+      startingCashFloat: startingFloat,
+      status: 'open',
+    };
+    setCurrentShift(newShift);
+    setIsShiftDialogOpen(false);
+  };
+
+  const handleEndShift = (actualCash: number) => {
+    if(currentShift) {
+        const updatedShift = {
+            ...currentShift,
+            endTime: new Date().toISOString(),
+            status: 'closed' as Shift['status'],
+            actualCashTotal: actualCash,
+        }
+        // In a real app, you would save this to the database
+        console.log("Shift Ended:", updatedShift);
+        setCurrentShift(null);
+        setSalesThisShift([]);
+        setIsShiftDialogOpen(true);
+    }
+  };
+
+
+  if (!currentShift) {
+    return (
+        <ShiftManagementDialog
+            mode="start"
+            onStartShift={handleStartShift}
+            isOpen={isShiftDialogOpen}
+            onOpenChange={setIsShiftDialogOpen}
+        />
+    )
+  }
 
 
   return (
@@ -139,10 +194,16 @@ export default function PosPage() {
                   <Card className='h-full flex flex-col'>
                       <CardHeader className="flex-row items-center justify-between pb-4">
                         <CardTitle>Products</CardTitle>
-                        <Button variant="outline" onClick={() => setIsHeldOrdersOpen(true)}>
-                            <Archive className="mr-2 h-4 w-4" />
-                            View Held Sales ({heldOrders.length})
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setIsHeldOrdersOpen(true)}>
+                              <Archive className="mr-2 h-4 w-4" />
+                              View Held Sales ({heldOrders.length})
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => setIsShiftDialogOpen(true)}>
+                              <LogOut className="mr-2 h-4 w-4" />
+                              End Shift
+                          </Button>
+                        </div>
                       </CardHeader>
                       <CardContent className='p-4 pt-0 flex-1'>
                           <ProductGrid products={allProducts} onAddToCart={handleAddToCart} />
@@ -170,8 +231,9 @@ export default function PosPage() {
         isOpen={isChargeModalOpen}
         onOpenChange={setIsChargeModalOpen}
         cart={cart}
+        customer={selectedCustomer}
         discount={discount}
-        onClearCart={handleNewSale}
+        onSaleComplete={handleSaleComplete}
       />
       <CustomerSearchDialog
         isOpen={isCustomerSearchOpen}
@@ -185,6 +247,16 @@ export default function PosPage() {
         onRetrieveOrder={handleRetrieveOrder}
         onDeleteOrder={handleDeleteOrder}
       />
+      {currentShift && (
+        <ShiftManagementDialog
+            mode="end"
+            isOpen={isShiftDialogOpen}
+            onOpenChange={setIsShiftDialogOpen}
+            shift={currentShift}
+            sales={salesThisShift}
+            onEndShift={handleEndShift}
+        />
+      )}
     </>
   );
 }

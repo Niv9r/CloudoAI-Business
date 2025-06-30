@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import type { CartItem, Discount } from '@/lib/types';
+import type { CartItem, Discount, Sale, Customer } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -21,22 +21,23 @@ interface ChargeDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   cart: CartItem[];
+  customer: Customer | null;
   discount: Discount | null;
-  onClearCart: () => void;
+  onSaleComplete: (sale: Sale) => void;
 }
 
 type PaymentStep = 'payment' | 'complete';
 type PaymentMethod = 'Cash' | 'Card';
 
-export default function ChargeDialog({ isOpen, onOpenChange, cart, discount, onClearCart }: ChargeDialogProps) {
+export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, discount, onSaleComplete }: ChargeDialogProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<PaymentStep>('payment');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
   const [tenderedAmount, setTenderedAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const total = useMemo(() => {
-    if (cart.length === 0) return 0;
+  const { subtotal, discountAmount, taxAmount, total } = useMemo(() => {
+    if (cart.length === 0) return { subtotal: 0, discountAmount: 0, taxAmount: 0, total: 0 };
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const discountAmount = (() => {
       if (!discount) return 0;
@@ -49,8 +50,9 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, discount, onC
       return 0;
     })();
     const subtotalAfterDiscount = subtotal - discountAmount;
-    const tax = subtotalAfterDiscount * 0.1;
-    return subtotalAfterDiscount + tax;
+    const taxAmount = subtotalAfterDiscount * 0.1;
+    const total = subtotalAfterDiscount + taxAmount;
+    return { subtotal, discountAmount, taxAmount, total };
   }, [cart, discount]);
 
   const changeDue = useMemo(() => {
@@ -95,7 +97,28 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, discount, onC
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    onClearCart();
+    // Construct the sale object
+    const newSale: Sale = {
+        id: `SALE-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        customer: customer ? `${customer.firstName} ${customer.lastName}` : 'Guest',
+        employee: 'Admin User', // Hardcoded for now
+        subtotal: subtotal,
+        discount: discountAmount,
+        tax: taxAmount,
+        total: total,
+        payment: paymentMethod,
+        status: 'Completed',
+        lineItems: cart.map(item => ({
+            productId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.price,
+            subtotal: item.price * item.quantity
+        }))
+    };
+
+    onSaleComplete(newSale);
     setIsProcessing(false);
     setStep('complete');
   };
