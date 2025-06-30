@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import {
   Card,
   CardContent,
@@ -38,7 +38,7 @@ function SubmitButton() {
 }
 
 export default function SmartReorder() {
-  const [state, formAction] = useFormState(handleSuggestReorder, initialState);
+  const [state, formAction] = useActionState(handleSuggestReorder, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
