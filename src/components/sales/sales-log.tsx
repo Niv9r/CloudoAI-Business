@@ -27,7 +27,7 @@ import { useInventory } from "@/context/inventory-context";
 
 export default function SalesLog() {
   const { selectedBusiness } = useBusiness();
-  const { getSales } = useInventory();
+  const { getSales, processRefund } = useInventory();
   const sales = getSales(selectedBusiness.id);
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -44,6 +44,13 @@ export default function SalesLog() {
 
   const handleViewDetails = (sale: Sale) => {
     setSelectedSale(sale);
+  };
+  
+  const handleProcessRefund = (saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => {
+    processRefund(selectedBusiness.id, saleId, itemsToRefund);
+    // After refund, the sale data is stale, so we close the dialog.
+    // The user can re-open to see the updated state.
+    setSelectedSale(null);
   };
 
   const handlePrintReceipt = (saleId: string) => {
@@ -186,6 +193,7 @@ export default function SalesLog() {
                 }
             }}
             sale={selectedSale}
+            onProcessRefund={handleProcessRefund}
         />
       )}
     </>

@@ -65,6 +65,7 @@ export type SaleLineItem = {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  refundedQuantity?: number;
 };
 
 export type Sale = {
@@ -79,6 +80,7 @@ export type Sale = {
   subtotal: number;
   tax: number;
   discount: number;
+  refundedAmount?: number;
 };
 
 export type Shift = {

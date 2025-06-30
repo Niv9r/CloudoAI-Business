@@ -22,22 +22,26 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Printer, CreditCard } from 'lucide-react';
+import { Printer, CreditCard, Undo2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import RefundDialog from './refund-dialog';
 
 interface SaleDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   sale: Sale;
+  onProcessRefund: (saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => void;
 }
 
-export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDetailsDialogProps) {
+export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProcessRefund }: SaleDetailsDialogProps) {
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setIsClient(true);
+      setIsRefundDialogOpen(false); // Reset when main dialog opens
     }
   }, [isOpen]);
 
@@ -49,7 +53,10 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
     });
   };
 
+  const isRefundable = sale.status === 'Completed' || sale.status === 'Partially Refunded';
+
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
@@ -58,7 +65,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
             {isClient ? format(new Date(sale.timestamp), 'PPpp') : <>&nbsp;</>}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <h4 className="font-semibold">Customer</h4>
@@ -79,6 +86,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
                   <TableHead className="text-center">Quantity</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Subtotal</TableHead>
+                  <TableHead className="text-center">Refunded</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -88,6 +96,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
                     <TableCell className="text-center">{item.quantity}</TableCell>
                     <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-right">${item.subtotal.toFixed(2)}</TableCell>
+                    <TableCell className="text-center">{item.refundedQuantity || 0}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -124,6 +133,12 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
                 <span>Total</span>
                 <span>${sale.total.toFixed(2)}</span>
               </div>
+               {sale.refundedAmount && sale.refundedAmount > 0 && (
+                 <div className="flex justify-between text-destructive">
+                    <span className="font-semibold">Refunded</span>
+                    <span className="font-semibold">-${sale.refundedAmount.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -132,9 +147,24 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
             <Printer className="mr-2 h-4 w-4" />
             Print Receipt
           </Button>
+           {isRefundable && (
+            <Button variant="destructive" onClick={() => setIsRefundDialogOpen(true)}>
+                <Undo2 className="mr-2 h-4 w-4" />
+                Process Refund
+            </Button>
+          )}
           <Button onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+     {isRefundDialogOpen && (
+        <RefundDialog
+            isOpen={isRefundDialogOpen}
+            onOpenChange={setIsRefundDialogOpen}
+            sale={sale}
+            onConfirmRefund={onProcessRefund}
+        />
+    )}
+    </>
   );
 }

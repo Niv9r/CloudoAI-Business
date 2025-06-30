@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
-import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift } from '@/lib/types';
+import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift, SaleLineItem } from '@/lib/types';
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -28,6 +28,7 @@ interface InventoryContextType {
   adjustStock: (businessId: string, data: StockAdjustmentFormValues) => void;
 
   addSale: (businessId: string, saleData: Omit<Sale, 'id' | 'employee'>) => Sale;
+  processRefund: (businessId: string, saleId: string, itemsToRefund: { productId: string, quantity: number }[]) => void;
   
   addExpense: (businessId: string, data: ExpenseFormValues) => void;
   updateExpense: (businessId: string, expense: Expense) => void;
@@ -255,6 +256,77 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return newSale;
   }, []);
 
+  const processRefund = useCallback((businessId: string, saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => {
+    setDb(prevDb => {
+        const newDb = JSON.parse(JSON.stringify(prevDb)); // Deep copy to avoid mutation issues
+        const businessSales = newDb.sales[businessId] || [];
+        const saleToUpdate = businessSales.find((s: Sale) => s.id === saleId);
+
+        if (!saleToUpdate) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Sale not found.' });
+            return prevDb;
+        }
+
+        let refundSubtotal = 0;
+        const updatedLineItems = saleToUpdate.lineItems.map((li: SaleLineItem) => {
+            const itemToRefund = itemsToRefund.find(itr => itr.productId === li.productId);
+            if (itemToRefund) {
+                // Ensure we don't refund more than what was bought.
+                const alreadyRefunded = li.refundedQuantity || 0;
+                const maxRefundable = li.quantity - alreadyRefunded;
+                const quantityToRefund = Math.min(itemToRefund.quantity, maxRefundable);
+
+                if (quantityToRefund > 0) {
+                    refundSubtotal += quantityToRefund * li.unitPrice;
+                    return {
+                        ...li,
+                        refundedQuantity: alreadyRefunded + quantityToRefund
+                    };
+                }
+            }
+            return li;
+        });
+        
+        // This is a simplified tax refund calculation. 
+        // A real system would need to handle tax rules more carefully.
+        const effectiveSubtotal = saleToUpdate.subtotal - saleToUpdate.discount;
+        const taxRate = effectiveSubtotal > 0 ? saleToUpdate.tax / effectiveSubtotal : 0;
+        const totalRefundAmount = refundSubtotal * (1 + taxRate);
+
+
+        const isFullyRefunded = updatedLineItems.every((li: SaleLineItem) => (li.refundedQuantity || 0) >= li.quantity);
+        const newStatus: Sale['status'] = isFullyRefunded ? 'Refunded' : 'Partially Refunded';
+        
+        const updatedSale: Sale = {
+            ...saleToUpdate,
+            lineItems: updatedLineItems,
+            status: newStatus,
+            refundedAmount: (saleToUpdate.refundedAmount || 0) + totalRefundAmount,
+        };
+
+        newDb.sales[businessId] = businessSales.map((s: Sale) => s.id === saleId ? updatedSale : s);
+
+        // Update product stock
+        const businessProducts = newDb.products[businessId] || [];
+        newDb.products[businessId] = businessProducts.map((prod: Product) => {
+            const refundedItem = itemsToRefund.find(ri => ri.productId === prod.id);
+            if (refundedItem) {
+                const newStock = prod.stock + refundedItem.quantity;
+                return {
+                    ...prod,
+                    stock: newStock,
+                    status: getStatusFromStock(newStock)
+                };
+            }
+            return prod;
+        });
+
+        return newDb;
+    });
+
+    toast({ title: "Refund Processed", description: "The refund has been successfully processed and inventory has been updated." });
+  }, [toast]);
+
   const getStatusFromDueDate = (dueDate: Date): Expense['status'] => {
       if (new Date(dueDate) < new Date()) return 'Overdue';
       return 'Pending';
@@ -452,6 +524,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     receiveStock,
     adjustStock,
     addSale,
+    processRefund,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -464,7 +537,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   }), [
     getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
-    addSale, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
+    addSale, processRefund, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
     addVendor, updateVendor, deleteVendor
   ]);
 
