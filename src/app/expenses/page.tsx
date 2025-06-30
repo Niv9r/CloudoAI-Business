@@ -109,7 +109,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <>
+    <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Expenses</h1>
@@ -158,6 +158,6 @@ export default function ExpensesPage() {
             </AlertDialogContent>
         </AlertDialog>
        )}
-    </>
+    </div>
   );
 }

@@ -41,7 +41,7 @@ export default function Home() {
   }, [selectedBusiness]);
 
   return (
-    <>
+    <div className="flex h-full flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">{selectedBusiness.name} Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's a summary of your business.</p>
@@ -70,6 +70,6 @@ export default function Home() {
           <SmartReorder />
         </div>
       </div>
-    </>
+    </div>
   );
 }

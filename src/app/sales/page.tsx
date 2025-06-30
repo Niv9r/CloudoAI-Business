@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SalesPage() {
   return (
-    <>
+    <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Sales</h1>
@@ -21,6 +21,6 @@ export default function SalesPage() {
       <div className="flex-1 overflow-hidden">
         <SalesLog />
       </div>
-    </>
+    </div>
   );
 }

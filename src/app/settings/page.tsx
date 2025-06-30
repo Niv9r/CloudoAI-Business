@@ -3,7 +3,7 @@ import ManageBusinessesCard from "@/components/settings/manage-businesses-card";
 
 export default function SettingsPage() {
   return (
-    <>
+    <div className="flex h-full flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your business profiles and application settings.</p>
@@ -16,6 +16,6 @@ export default function SettingsPage() {
             <BusinessProfileCard />
         </div>
       </div>
-    </>
+    </div>
   );
 }

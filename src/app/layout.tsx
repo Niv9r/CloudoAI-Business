@@ -29,11 +29,11 @@ export default function RootLayout({
         <BusinessProvider>
           <InventoryProvider>
             <SidebarProvider>
-              <div className="relative flex min-h-screen">
+              <div className="relative flex min-h-screen w-full">
                 <AppSidebar />
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex flex-1 flex-col overflow-hidden">
                   <AppHeader />
-                  <main className="flex flex-1 flex-col gap-4 p-4 sm:p-6 md:p-8">
+                  <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     {children}
                   </main>
                 </div>
