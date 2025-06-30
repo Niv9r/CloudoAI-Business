@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -11,19 +11,26 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Search, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { sales } from "@/lib/mock-data";
 import type { Sale } from "@/lib/types";
 import SaleDetailsDialog from "./sale-details-dialog";
 import { useToast } from "@/hooks/use-toast";
-
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { DatePickerWithRange } from "../ui/date-picker";
+import type { DateRange } from "react-day-picker";
 
 export default function SalesLog() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const { toast } = useToast();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handleViewDetails = (sale: Sale) => {
     setSelectedSale(sale);
@@ -36,14 +43,76 @@ export default function SalesLog() {
     });
   }
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setDateRange(undefined);
+  };
+
+  const filteredSales = useMemo(() => {
+    return sales.filter(sale => {
+      // Search term filter
+      const searchMatch = searchTerm.toLowerCase() === '' ||
+        sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sale.employee.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Status filter
+      const statusMatch = statusFilter === 'all' || sale.status === statusFilter;
+
+      // Date range filter
+      const saleDate = new Date(sale.timestamp);
+      const dateMatch = !dateRange || (
+        (!dateRange.from || saleDate >= startOfDay(dateRange.from)) &&
+        (!dateRange.to || saleDate <= endOfDay(dateRange.to))
+      );
+
+      return searchMatch && statusMatch && dateMatch;
+    });
+  }, [searchTerm, statusFilter, dateRange]);
+
+  const hasActiveFilters = searchTerm !== "" || statusFilter !== "all" || dateRange !== undefined;
+
   return (
     <>
       <Card>
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
-          <CardDescription>A log of all sales and returns.</CardDescription>
+          <CardDescription>Search, filter, and review all sales and returns.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <div className="flex flex-col md:flex-row items-center gap-4 px-6 pb-4 border-b">
+          <div className="relative flex-1 w-full md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by ID, customer..."
+              className="pl-8 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Refunded">Refunded</SelectItem>
+                <SelectItem value="Partially Refunded">Partially Refunded</SelectItem>
+              </SelectContent>
+            </Select>
+            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+              <X className="mr-2 h-4 w-4" />
+              Clear
+            </Button>
+          )}
+        </div>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -59,7 +128,7 @@ export default function SalesLog() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sales.map((sale) => (
+              {filteredSales.length > 0 ? filteredSales.map((sale) => (
                 <TableRow key={sale.id}>
                   <TableCell className="font-medium">{sale.id}</TableCell>
                   <TableCell>{format(new Date(sale.timestamp), 'PPpp')}</TableCell>
@@ -87,7 +156,13 @@ export default function SalesLog() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                        No results found.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
