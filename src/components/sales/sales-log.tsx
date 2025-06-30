@@ -46,8 +46,8 @@ export default function SalesLog() {
     setSelectedSale(sale);
   };
   
-  const handleProcessRefund = (saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => {
-    processRefund(selectedBusiness.id, saleId, itemsToRefund);
+  const handleProcessRefund = (saleId: string, itemsToRefund: { productId: string; quantity: number }[], restockItems: boolean) => {
+    processRefund(selectedBusiness.id, saleId, itemsToRefund, restockItems);
     // After refund, the sale data is stale, so we close the dialog.
     // The user can re-open to see the updated state.
     setSelectedSale(null);

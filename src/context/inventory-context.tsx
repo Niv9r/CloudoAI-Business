@@ -28,7 +28,7 @@ interface InventoryContextType {
   adjustStock: (businessId: string, data: StockAdjustmentFormValues) => void;
 
   addSale: (businessId: string, saleData: Omit<Sale, 'id' | 'employee'>) => Sale;
-  processRefund: (businessId: string, saleId: string, itemsToRefund: { productId: string, quantity: number }[]) => void;
+  processRefund: (businessId: string, saleId: string, itemsToRefund: { productId: string, quantity: number }[], restockItems: boolean) => void;
   
   addExpense: (businessId: string, data: ExpenseFormValues) => void;
   updateExpense: (businessId: string, expense: Expense) => void;
@@ -256,7 +256,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     return newSale;
   }, []);
 
-  const processRefund = useCallback((businessId: string, saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => {
+  const processRefund = useCallback((businessId: string, saleId: string, itemsToRefund: { productId: string; quantity: number }[], restockItems: boolean) => {
     setDb(prevDb => {
         const newDb = JSON.parse(JSON.stringify(prevDb)); // Deep copy to avoid mutation issues
         const businessSales = newDb.sales[businessId] || [];
@@ -306,25 +306,27 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
         newDb.sales[businessId] = businessSales.map((s: Sale) => s.id === saleId ? updatedSale : s);
 
-        // Update product stock
-        const businessProducts = newDb.products[businessId] || [];
-        newDb.products[businessId] = businessProducts.map((prod: Product) => {
-            const refundedItem = itemsToRefund.find(ri => ri.productId === prod.id);
-            if (refundedItem) {
-                const newStock = prod.stock + refundedItem.quantity;
-                return {
-                    ...prod,
-                    stock: newStock,
-                    status: getStatusFromStock(newStock)
-                };
-            }
-            return prod;
-        });
+        // Update product stock only if specified
+        if (restockItems) {
+            const businessProducts = newDb.products[businessId] || [];
+            newDb.products[businessId] = businessProducts.map((prod: Product) => {
+                const refundedItem = itemsToRefund.find(ri => ri.productId === prod.id);
+                if (refundedItem) {
+                    const newStock = prod.stock + refundedItem.quantity;
+                    return {
+                        ...prod,
+                        stock: newStock,
+                        status: getStatusFromStock(newStock)
+                    };
+                }
+                return prod;
+            });
+        }
 
         return newDb;
     });
 
-    toast({ title: "Refund Processed", description: "The refund has been successfully processed and inventory has been updated." });
+    toast({ title: "Refund Processed", description: `The refund has been successfully processed${restockItems ? ' and inventory has been updated' : ''}.` });
   }, [toast]);
 
   const getStatusFromDueDate = (dueDate: Date): Expense['status'] => {

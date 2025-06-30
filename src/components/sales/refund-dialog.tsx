@@ -14,19 +14,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface RefundDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   sale: Sale;
-  onConfirmRefund: (saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => void;
+  onConfirmRefund: (saleId: string, itemsToRefund: { productId: string; quantity: number }[], restockItems: boolean) => void;
 }
 
 export default function RefundDialog({ isOpen, onOpenChange, sale, onConfirmRefund }: RefundDialogProps) {
   const [refundQuantities, setRefundQuantities] = useState<Record<string, number>>({});
+  const [restockItems, setRestockItems] = useState(true);
+
 
   useEffect(() => {
     setRefundQuantities({});
+    setRestockItems(true);
   }, [isOpen]);
 
   const handleQuantityChange = (productId: string, value: string, max: number) => {
@@ -63,7 +68,7 @@ export default function RefundDialog({ isOpen, onOpenChange, sale, onConfirmRefu
 
   const handleSubmit = () => {
     if (itemsToRefund.length > 0) {
-      onConfirmRefund(sale.id, itemsToRefund);
+      onConfirmRefund(sale.id, itemsToRefund, restockItems);
       onOpenChange(false);
     }
   };
@@ -115,8 +120,16 @@ export default function RefundDialog({ isOpen, onOpenChange, sale, onConfirmRefu
           </Table>
         </div>
         <Separator />
-        <div className="flex justify-end font-bold text-lg">
-            Total Refund: ${refundTotal.toFixed(2)}
+        <div className="flex justify-between items-center pt-2 pb-2">
+            <div className="flex items-center space-x-2">
+                <Checkbox id="restock-items" checked={restockItems} onCheckedChange={(checked) => setRestockItems(checked as boolean)} />
+                <Label htmlFor="restock-items" className="text-sm font-normal">
+                    Return items to inventory
+                </Label>
+            </div>
+            <div className="font-bold text-lg">
+                Total Refund: ${refundTotal.toFixed(2)}
+            </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>

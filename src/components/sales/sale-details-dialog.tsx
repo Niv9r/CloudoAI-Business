@@ -30,7 +30,7 @@ interface SaleDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   sale: Sale;
-  onProcessRefund: (saleId: string, itemsToRefund: { productId: string; quantity: number }[]) => void;
+  onProcessRefund: (saleId: string, itemsToRefund: { productId: string; quantity: number }[], restockItems: boolean) => void;
 }
 
 export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProcessRefund }: SaleDetailsDialogProps) {
