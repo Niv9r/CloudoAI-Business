@@ -126,7 +126,7 @@ export type Expense = {
   dueDate: string; // ISO string
   lineItems: ExpenseLineItem[];
   total: number;
-  status: 'Draft' | 'Pending' | 'Paid' | 'Overdue';
+  status: 'Pending' | 'Paid' | 'Overdue';
   notes?: string;
 };
 

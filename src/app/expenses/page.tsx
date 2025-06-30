@@ -30,7 +30,7 @@ export default function ExpensesPage() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
-  const getStatus = (expense: Omit<Expense, 'status' | 'id' | 'total' | 'lineItems'> & {dueDate: string}): Expense['status'] => {
+  const getStatus = (expense: Omit<Expense, 'status' | 'id' | 'total' | 'lineItems'> & {dueDate: Date}): Expense['status'] => {
       if (new Date(expense.dueDate) < new Date()) return 'Overdue';
       return 'Pending';
   }
@@ -65,7 +65,7 @@ export default function ExpensesPage() {
         ...newExpenseData,
         lineItems: data.lineItems.map(li => ({ ...li, id: `LI-${Date.now()}`})),
         total,
-        status: getStatus(newExpenseData)
+        status: getStatus(data)
       };
       
       setExpenses([newExpense, ...expenses]);
@@ -109,7 +109,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full w-full flex-col gap-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Expenses</h1>
