@@ -61,7 +61,7 @@ export default function WholesalePage() {
 
   const handleSaveOrder = (data: WholesaleOrderFormValues) => {
     if (orderToEdit) {
-      updateWholesaleOrder(selectedBusiness.id, { ...orderToEdit, ...data });
+      updateWholesaleOrder(selectedBusiness.id, { ...orderToEdit, ...data, orderDate: data.orderDate.toISOString() });
     } else {
       addWholesaleOrder(selectedBusiness.id, data);
     }

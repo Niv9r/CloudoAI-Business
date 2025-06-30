@@ -593,24 +593,24 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         // Update Order
         const orderToUpdate = (newDb.wholesaleOrders[businessId] || []).find(o => o.id === orderId);
         if (orderToUpdate) {
-            const updatedLineItems = orderToUpdate.lineItems.map(li => {
+            const updatedLineItems = orderToUpdate.lineItems.map((li: WholesaleOrderLineItem) => {
                 const shippedItem = shippedItems.find(si => si.productId === li.productId);
                 return shippedItem ? { ...li, quantityShipped: (li.quantityShipped || 0) + shippedItem.quantityShipped } : li;
             });
 
-            const isFullyShipped = updatedLineItems.every(li => (li.quantityShipped || 0) >= li.quantity);
+            const isFullyShipped = updatedLineItems.every((li: WholesaleOrderLineItem) => (li.quantityShipped || 0) >= li.quantity);
             
             const updatedOrder: WholesaleOrder = {
                 ...orderToUpdate,
                 lineItems: updatedLineItems,
                 status: isFullyShipped ? 'Completed' : 'Shipped' // Could also be 'Partially Shipped'
             };
-            newDb.wholesaleOrders[businessId] = (newDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? updatedOrder : o);
+            newDb.wholesaleOrders[businessId] = (newDb.wholesaleOrders[businessId] || []).map((o: WholesaleOrder) => o.id === orderId ? updatedOrder : o);
         }
 
         // Update Product Stock
         const businessProducts = newDb.products[businessId] || [];
-        newDb.products[businessId] = businessProducts.map(prod => {
+        newDb.products[businessId] = businessProducts.map((prod: Product) => {
             const shippedItem = shippedItems.find(si => si.productId === prod.id);
             if (shippedItem) {
                 const newStock = prod.stock - shippedItem.quantityShipped;

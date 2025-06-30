@@ -284,7 +284,7 @@ export type WebsiteStructure = {
 };
 
 export type BusinessKnowledgeBase = {
-    id: string;
+    id:string;
     businessId: string;
     documentType: 'policy' | 'faq' | 'guide' | 'note';
     title: string;

@@ -110,7 +110,7 @@ export default function WholesaleOrdersLog({ orders, customers, onEdit, onConfir
                         </DropdownMenuItem>
                       )}
 
-                      {order.status === 'Awaiting Fulfillment' && (
+                      {(order.status === 'Awaiting Fulfillment' || order.status === 'Shipped') && (
                         <DropdownMenuItem onClick={() => onShip(order)}>
                             <Truck className="mr-2 h-4 w-4" />
                             Ship Items
