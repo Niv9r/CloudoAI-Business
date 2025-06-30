@@ -23,6 +23,7 @@ import {
   ClipboardPlus,
   Lightbulb,
   Clock,
+  Building2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -41,6 +42,7 @@ export default function AppSidebar() {
     { href: '/stock-adjustments', label: 'Stock Adjustments', icon: ClipboardPlus },
     { href: '/purchase-orders', label: 'Purchase Orders', icon: ClipboardList },
     { href: '/customers', label: 'Customers', icon: Users },
+    { href: '/vendors', label: 'Vendors', icon: Building2 },
     { href: '/expenses', label: 'Expenses', icon: CreditCard },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: Settings },

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
-import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift } from '@/lib/types';
+import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift } from '@/lib/types';
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -36,6 +36,10 @@ interface InventoryContextType {
 
   addShift: (businessId: string, startingFloat: number) => Shift;
   endShift: (businessId: string, shiftId: string, actualCash: number, salesThisShift: Sale[], notes?: string) => void;
+
+  addVendor: (businessId: string, data: VendorFormValues) => void;
+  updateVendor: (businessId: string, vendor: Vendor) => void;
+  deleteVendor: (businessId: string, vendorId: string) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -385,6 +389,51 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addVendor = useCallback((businessId: string, data: VendorFormValues) => {
+    const newVendor: Vendor = {
+        id: `VEND${Date.now()}`,
+        ...data,
+    };
+    setDb(prevDb => ({
+        ...prevDb,
+        vendors: {
+            ...prevDb.vendors,
+            [businessId]: [...(prevDb.vendors[businessId] || []), newVendor]
+        }
+    }));
+    toast({ title: "Success", description: "Vendor added successfully." });
+  }, [toast]);
+
+  const updateVendor = useCallback((businessId: string, updatedVendor: Vendor) => {
+      setDb(prevDb => ({
+          ...prevDb,
+          vendors: {
+              ...prevDb.vendors,
+              [businessId]: (prevDb.vendors[businessId] || []).map(v => v.id === updatedVendor.id ? updatedVendor : v)
+          }
+      }));
+      toast({ title: "Success", description: "Vendor updated successfully." });
+  }, [toast]);
+
+  const deleteVendor = useCallback((businessId: string, vendorId: string) => {
+      const vendorToDelete = (db.vendors[businessId] || []).find(v => v.id === vendorId);
+      setDb(prevDb => ({
+          ...prevDb,
+          vendors: {
+              ...prevDb.vendors,
+              [businessId]: (prevDb.vendors[businessId] || []).filter(v => v.id !== vendorId)
+          }
+      }));
+      if (vendorToDelete) {
+          toast({
+              variant: "destructive",
+              title: "Vendor Deleted",
+              description: `"${vendorToDelete.name}" has been removed.`,
+          });
+      }
+  }, [db.vendors, toast]);
+
+
   const value = useMemo(() => ({
     getProducts,
     getPurchaseOrders,
@@ -409,10 +458,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     markExpenseAsPaid,
     addShift,
     endShift,
+    addVendor,
+    updateVendor,
+    deleteVendor,
   }), [
     getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
-    addSale, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift
+    addSale, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
+    addVendor, updateVendor, deleteVendor
   ]);
 
   return (

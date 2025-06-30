@@ -105,6 +105,15 @@ export type Vendor = {
   phone: string;
 };
 
+export const vendorFormSchema = z.object({
+    name: z.string().min(2, { message: 'Vendor name must be at least 2 characters.' }),
+    contactPerson: z.string().min(2, { message: 'Contact person name is required.' }),
+    email: z.string().email({ message: 'Please enter a valid email.' }),
+    phone: z.string().min(10, { message: 'Please enter a valid phone number.' }),
+});
+export type VendorFormValues = z.infer<typeof vendorFormSchema>;
+
+
 export const expenseLineItemSchema = z.object({
   description: z.string().min(1, 'Description is required.'),
   amount: z.coerce.number().min(0.01, 'Amount must be greater than 0.'),

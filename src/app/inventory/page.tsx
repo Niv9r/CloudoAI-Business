@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useInventory } from "@/context/inventory-context";
 import { useBusiness } from "@/context/business-context";
+import SmartReorder from "@/components/dashboard/smart-reorder";
 
 
 export default function InventoryPage() {
@@ -65,24 +66,30 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-8">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground">Manage your products and stock levels.</p>
+          <p className="text-muted-foreground">Manage products and get AI-powered reorder suggestions.</p>
         </div>
         <Button onClick={handleOpenAddDialog}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Product
         </Button>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <ProductTable 
-            key={selectedBusiness.id} 
-            products={products} 
-            onEdit={handleOpenEditDialog} 
-            onDelete={handleOpenDeleteDialog} 
-        />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start flex-1">
+        <div className="lg:col-span-2 h-full">
+            <ProductTable 
+                key={selectedBusiness.id} 
+                products={products} 
+                onEdit={handleOpenEditDialog} 
+                onDelete={handleOpenDeleteDialog} 
+            />
+        </div>
+        <div className="lg:col-span-1 h-full">
+            <SmartReorder key={`${selectedBusiness.id}-reorder`} />
+        </div>
       </div>
 
       <ProductFormDialog
