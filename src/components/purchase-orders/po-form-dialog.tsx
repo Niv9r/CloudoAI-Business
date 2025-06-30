@@ -90,7 +90,7 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Purchase Order' : 'Create New Purchase Order'}</DialogTitle>
           <DialogDescription>
@@ -122,7 +122,7 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="issueDate"
@@ -185,44 +185,44 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
 
             <div>
               <Label>Line Items</Label>
-              <div className="space-y-2 mt-2">
+              <div className="space-y-3 mt-2">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-12 items-start gap-2">
-                    <div className="col-span-6">
-                        <FormField
-                            control={form.control}
-                            name={`lineItems.${index}.productId`}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a product" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    {products.map(product => (
-                                        <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
+                  <div key={field.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <div className="w-full sm:flex-1">
+                      <FormField
+                          control={form.control}
+                          name={`lineItems.${index}.productId`}
+                          render={({ field }) => (
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                  <SelectTrigger>
+                                      <SelectValue placeholder="Select a product" />
+                                  </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                  {products.map(product => (
+                                      <SelectItem key={product.id} value={product.id}>{product.name}</SelectItem>
+                                  ))}
+                                  </SelectContent>
+                              </Select>
+                          )}
+                      />
                     </div>
-                     <div className="col-span-2">
+                     <div className="w-full sm:w-24">
                         <FormField
                             control={form.control}
                             name={`lineItems.${index}.quantity`}
                             render={({ field }) => <Input type="number" placeholder="Qty" {...field} />}
                         />
                     </div>
-                     <div className="col-span-3">
+                     <div className="w-full sm:w-32">
                         <FormField
                             control={form.control}
                             name={`lineItems.${index}.unitCost`}
                             render={({ field }) => <Input type="number" step="0.01" placeholder="Unit Cost" {...field} />}
                         />
                     </div>
-                    <div className="col-span-1">
+                    <div>
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} disabled={fields.length <= 1}>
                             <Trash2 className="h-4 w-4" />
                         </Button>

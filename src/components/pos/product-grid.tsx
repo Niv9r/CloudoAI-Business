@@ -34,7 +34,7 @@ export default function ProductGrid({ products, onAddToCart }: ProductGridProps)
         />
       </div>
       <ScrollArea className="flex-1">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filteredProducts.map((product) => (
             <Card
               key={product.id}

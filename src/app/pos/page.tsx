@@ -191,8 +191,8 @@ export default function PosPage() {
   return (
     <>
       <div className="h-[calc(100vh-4rem-1px)] -m-4 sm:-m-6 md:-m-8">
-          <div className="grid grid-cols-12 gap-6 h-full p-6">
-              <div className="col-span-12 lg:col-span-7 xl:col-span-8 h-full">
+          <div className="grid h-full grid-cols-12 gap-4 p-4 md:gap-6 md:p-6">
+              <div className="col-span-12 h-full md:col-span-7 lg:col-span-8">
                   <Card className='h-full flex flex-col'>
                       <CardHeader className="flex-row items-center justify-between pb-4">
                         <CardTitle>Products</CardTitle>
@@ -212,7 +212,7 @@ export default function PosPage() {
                       </CardContent>
                   </Card>
               </div>
-              <div className="col-span-12 lg:col-span-5 xl:col-span-4 h-full">
+              <div className="col-span-12 h-full md:col-span-5 lg:col-span-4">
                   <Cart 
                       cart={cart}
                       customer={selectedCustomer}

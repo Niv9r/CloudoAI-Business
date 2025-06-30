@@ -91,7 +91,7 @@ export default function ExpenseFormDialog({ isOpen, onOpenChange, onSave, expens
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
           <DialogDescription>

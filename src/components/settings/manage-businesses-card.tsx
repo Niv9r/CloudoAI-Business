@@ -38,7 +38,7 @@ export default function ManageBusinessesCard() {
       <CardContent>
         <div className="space-y-2">
             {businesses.map((business) => (
-                <div key={business.id} className="flex items-center justify-between p-3 rounded-lg border">
+                <div key={business.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border p-3">
                    <div className="flex-1">
                         <button className="text-left" onClick={() => setSelectedBusiness(business)}>
                             <p className={`font-semibold ${business.id === selectedBusiness.id ? 'text-primary' : ''}`}>{business.name}</p>
