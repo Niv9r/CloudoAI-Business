@@ -105,7 +105,7 @@ export default function AppSidebar() {
           {navConfig.map((item) => (
             item.type === 'link' ? (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
+                <Link href={item.href} asChild>
                   <SidebarMenuButton
                     isActive={pathname === item.href}
                     tooltip={item.label}
@@ -131,7 +131,7 @@ export default function AppSidebar() {
                       <SidebarMenuSub>
                           {item.subItems.map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                  <Link href={subItem.href} passHref>
+                                  <Link href={subItem.href} asChild>
                                       <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                                           {subItem.label}
                                       </SidebarMenuSubButton>
