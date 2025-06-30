@@ -59,7 +59,7 @@ export default function PurchaseOrdersPage() {
 
   return (
     <>
-      <div className="w-full flex flex-1 flex-col gap-8">
+      <div className="flex flex-col gap-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">Purchase Orders</h1>

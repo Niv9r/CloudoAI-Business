@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SalesPage() {
   return (
-    <div className="w-full flex flex-1 flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Sales</h1>
