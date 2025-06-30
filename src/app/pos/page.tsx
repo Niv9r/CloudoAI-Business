@@ -6,9 +6,11 @@ import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
 import { products as allProducts } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
+import ChargeDialog from '@/components/pos/charge-dialog';
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -43,25 +45,40 @@ export default function PosPage() {
     setCart([]);
   };
 
+  const handleCharge = () => {
+    if (cart.length > 0) {
+      setIsChargeModalOpen(true);
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-4rem-1px)] -m-4 sm:-m-6 md:-m-8">
-        <div className="grid grid-cols-12 gap-6 h-full p-6">
-            <div className="col-span-12 lg:col-span-7 xl:col-span-8 h-full">
-                <Card className='h-full flex flex-col'>
-                    <CardContent className='p-4 flex-1'>
-                        <ProductGrid products={allProducts} onAddToCart={handleAddToCart} />
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="col-span-12 lg:col-span-5 xl:col-span-4 h-full">
-                <Cart 
-                    cart={cart} 
-                    onUpdateQuantity={handleUpdateQuantity}
-                    onRemoveItem={handleRemoveFromCart}
-                    onClearCart={handleClearCart}
-                />
-            </div>
-        </div>
-    </div>
+    <>
+      <div className="h-[calc(100vh-4rem-1px)] -m-4 sm:-m-6 md:-m-8">
+          <div className="grid grid-cols-12 gap-6 h-full p-6">
+              <div className="col-span-12 lg:col-span-7 xl:col-span-8 h-full">
+                  <Card className='h-full flex flex-col'>
+                      <CardContent className='p-4 flex-1'>
+                          <ProductGrid products={allProducts} onAddToCart={handleAddToCart} />
+                      </CardContent>
+                  </Card>
+              </div>
+              <div className="col-span-12 lg:col-span-5 xl:col-span-4 h-full">
+                  <Cart 
+                      cart={cart} 
+                      onUpdateQuantity={handleUpdateQuantity}
+                      onRemoveItem={handleRemoveFromCart}
+                      onClearCart={handleClearCart}
+                      onCharge={handleCharge}
+                  />
+              </div>
+          </div>
+      </div>
+      <ChargeDialog
+        isOpen={isChargeModalOpen}
+        onOpenChange={setIsChargeModalOpen}
+        cart={cart}
+        onClearCart={handleClearCart}
+      />
+    </>
   );
 }

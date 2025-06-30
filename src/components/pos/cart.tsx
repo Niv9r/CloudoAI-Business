@@ -13,9 +13,10 @@ interface CartProps {
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onRemoveItem: (productId: string) => void;
   onClearCart: () => void;
+  onCharge: () => void;
 }
 
-export default function Cart({ cart, onUpdateQuantity, onRemoveItem, onClearCart }: CartProps) {
+export default function Cart({ cart, onUpdateQuantity, onRemoveItem, onClearCart, onCharge }: CartProps) {
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const taxRate = 0.1; // 10% tax
   const taxAmount = subtotal * taxRate;
@@ -93,7 +94,7 @@ export default function Cart({ cart, onUpdateQuantity, onRemoveItem, onClearCart
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline">Save Sale</Button>
-                <Button size="lg">Charge</Button>
+                <Button size="lg" onClick={onCharge}>Charge</Button>
             </div>
         </CardFooter>
       )}
