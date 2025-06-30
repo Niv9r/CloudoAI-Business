@@ -1,7 +1,6 @@
 import KpiCard from "@/components/dashboard/kpi-card";
 import RecentSales from "@/components/dashboard/recent-sales";
 import SalesChart from "@/components/dashboard/sales-chart";
-import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
 import { DollarSign, ShoppingCart, Users, Wallet } from "lucide-react";
 
@@ -29,13 +28,8 @@ export default function Home() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <RecentSales />
-        </div>
-        <div className="lg:col-span-2">
-          <SmartReorder />
-        </div>
+      <div className="grid grid-cols-1 gap-4">
+        <RecentSales />
       </div>
     </div>
   );

@@ -11,54 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "../ui/dropdown-menu";
-
-const products = [
-  {
-    id: "PROD001",
-    name: "Artisan Coffee Beans",
-    sku: "ACB-250G",
-    category: "Coffee",
-    stock: 120,
-    price: 15.99,
-    status: "In Stock",
-  },
-  {
-    id: "PROD002",
-    name: "Classic Leather Wallet",
-    sku: "CLW-BLK-01",
-    category: "Accessories",
-    stock: 75,
-    price: 49.99,
-    status: "In Stock",
-  },
-  {
-    id: "PROD003",
-    name: "Silk Scarf",
-    sku: "SS-RED-LG",
-    category: "Apparel",
-    stock: 0,
-    price: 29.99,
-    status: "Out of Stock",
-  },
-  {
-    id: "PROD004",
-    name: "Canvas Tote Bag",
-    sku: "CTB-NAT-MD",
-    category: "Bags",
-    stock: 25,
-    price: 24.99,
-    status: "Low Stock",
-  },
-  {
-    id: "PROD005",
-    name: "Designer Sunglasses",
-    sku: "DS-TOR-55",
-    category: "Accessories",
-    stock: 40,
-    price: 149.99,
-    status: "In Stock",
-  },
-];
+import { products } from "@/lib/mock-data";
 
 export default function ProductTable() {
   return (

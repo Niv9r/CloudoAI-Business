@@ -18,6 +18,7 @@ import {
   Settings,
   ShoppingCart,
   Users,
+  Tablet
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -28,6 +29,7 @@ export default function AppSidebar() {
 
   const menuItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/pos', label: 'POS', icon: Tablet },
     { href: '/sales', label: 'Sales', icon: ShoppingCart },
     { href: '/inventory', label: 'Inventory', icon: Package },
     { href: '#', label: 'Reports', icon: BarChart3 },

@@ -1,4 +1,6 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/suggest-reorder-algorithm.ts';
+// Define and register flows here.
+// For example:
+// import '@/ai/flows/example-flow.ts';
