@@ -1,26 +1,15 @@
 'use client';
 
 import {
-  Bell,
-  Home,
-  LineChart,
-  Package,
-  Package2,
   Search,
-  ShoppingCart,
-  Users,
+  Store,
+  ChevronsUpDown,
+  Check,
+  PlusCircle
 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,12 +20,43 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useBusiness } from '@/context/business-context';
+
 
 export default function AppHeader() {
+  const { businesses, selectedBusiness, setSelectedBusiness } = useBusiness();
+
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 sticky top-0 z-30">
         <SidebarTrigger className="md:hidden" />
+        
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full max-w-[220px] justify-between sm:w-auto">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="font-semibold truncate">{selectedBusiness.name}</span>
+                </div>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64">
+              <DropdownMenuLabel>Select a Business</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {businesses.map((business) => (
+                <DropdownMenuItem key={business.id} onSelect={() => setSelectedBusiness(business)}>
+                  <Check className={`mr-2 h-4 w-4 ${selectedBusiness.id === business.id ? 'opacity-100' : 'opacity-0'}`} />
+                  {business.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                <span>Create Business</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <form className="ml-auto flex-1 sm:flex-initial">
           <div className="relative">

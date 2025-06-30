@@ -1,3 +1,9 @@
+export type Business = {
+    id: string;
+    name: string;
+    timezone: string;
+};
+
 export type Product = {
     id: string;
     name: string;
