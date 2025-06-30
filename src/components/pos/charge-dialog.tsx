@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import type { CartItem } from '@/lib/types';
+import type { CartItem, Discount } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -21,13 +21,14 @@ interface ChargeDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   cart: CartItem[];
+  discount: Discount | null;
   onClearCart: () => void;
 }
 
 type PaymentStep = 'payment' | 'complete';
 type PaymentMethod = 'Cash' | 'Card';
 
-export default function ChargeDialog({ isOpen, onOpenChange, cart, onClearCart }: ChargeDialogProps) {
+export default function ChargeDialog({ isOpen, onOpenChange, cart, discount, onClearCart }: ChargeDialogProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<PaymentStep>('payment');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
@@ -37,9 +38,20 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, onClearCart }
   const total = useMemo(() => {
     if (cart.length === 0) return 0;
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const tax = subtotal * 0.1;
-    return subtotal + tax;
-  }, [cart]);
+    const discountAmount = (() => {
+      if (!discount) return 0;
+      if (discount.type === 'fixed') {
+        return Math.min(discount.value, subtotal);
+      }
+      if (discount.type === 'percentage') {
+        return subtotal * (discount.value / 100);
+      }
+      return 0;
+    })();
+    const subtotalAfterDiscount = subtotal - discountAmount;
+    const tax = subtotalAfterDiscount * 0.1;
+    return subtotalAfterDiscount + tax;
+  }, [cart, discount]);
 
   const changeDue = useMemo(() => {
     const tendered = parseFloat(tenderedAmount);

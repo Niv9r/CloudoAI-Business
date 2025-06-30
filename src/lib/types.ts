@@ -11,3 +11,19 @@ export type Product = {
 export type CartItem = Product & {
     quantity: number;
 };
+
+export type Customer = {
+    id: string;
+    type: 'individual' | 'company';
+    firstName: string;
+    lastName: string;
+    companyName: string | null;
+    email: string;
+    phone: string;
+    loyaltyPoints?: number;
+};
+
+export type Discount = {
+    type: 'percentage' | 'fixed';
+    value: number;
+};

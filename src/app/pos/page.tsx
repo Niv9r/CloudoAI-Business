@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import type { CartItem, Product } from '@/lib/types';
+import type { CartItem, Product, Customer, Discount } from '@/lib/types';
 import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
 import { products as allProducts } from '@/lib/mock-data';
 import { Card, CardContent } from '@/components/ui/card';
 import ChargeDialog from '@/components/pos/charge-dialog';
+import CustomerSearchDialog from '@/components/pos/customer-search-dialog';
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
+  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [discount, setDiscount] = useState<Discount | null>(null);
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -41,8 +45,10 @@ export default function PosPage() {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-  const handleClearCart = () => {
+  const handleClearSale = () => {
     setCart([]);
+    setSelectedCustomer(null);
+    setDiscount(null);
   };
 
   const handleCharge = () => {
@@ -50,6 +56,24 @@ export default function PosPage() {
       setIsChargeModalOpen(true);
     }
   };
+
+  const handleSelectCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsCustomerSearchOpen(false);
+  };
+
+  const handleApplyDiscount = (appliedDiscount: Discount) => {
+    setDiscount(appliedDiscount);
+  }
+  
+  const handleRemoveDiscount = () => {
+      setDiscount(null);
+  }
+
+  const handleNewSale = () => {
+    handleClearSale();
+    setIsChargeModalOpen(false);
+  }
 
   return (
     <>
@@ -64,11 +88,16 @@ export default function PosPage() {
               </div>
               <div className="col-span-12 lg:col-span-5 xl:col-span-4 h-full">
                   <Cart 
-                      cart={cart} 
+                      cart={cart}
+                      customer={selectedCustomer}
+                      discount={discount}
                       onUpdateQuantity={handleUpdateQuantity}
                       onRemoveItem={handleRemoveFromCart}
-                      onClearCart={handleClearCart}
+                      onClearCart={handleClearSale}
                       onCharge={handleCharge}
+                      onSelectCustomerClick={() => setIsCustomerSearchOpen(true)}
+                      onApplyDiscount={handleApplyDiscount}
+                      onRemoveDiscount={handleRemoveDiscount}
                   />
               </div>
           </div>
@@ -77,7 +106,13 @@ export default function PosPage() {
         isOpen={isChargeModalOpen}
         onOpenChange={setIsChargeModalOpen}
         cart={cart}
-        onClearCart={handleClearCart}
+        discount={discount}
+        onClearCart={handleNewSale}
+      />
+      <CustomerSearchDialog
+        isOpen={isCustomerSearchOpen}
+        onOpenChange={setIsCustomerSearchOpen}
+        onSelectCustomer={handleSelectCustomer}
       />
     </>
   );

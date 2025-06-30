@@ -1,4 +1,4 @@
-import type { Product } from './types';
+import type { Product, Customer } from './types';
 
 export const products: Product[] = [
   {
@@ -91,4 +91,55 @@ export const products: Product[] = [
     price: 89.99,
     status: "In Stock",
   },
+];
+
+export const customers: Customer[] = [
+    {
+        id: "CUST001",
+        type: "individual",
+        firstName: "Alice",
+        lastName: "Johnson",
+        companyName: null,
+        email: "alice.j@email.com",
+        phone: "555-0101",
+        loyaltyPoints: 150,
+    },
+    {
+        id: "CUST002",
+        type: "individual",
+        firstName: "Bob",
+        lastName: "Williams",
+        companyName: null,
+        email: "bob.w@email.com",
+        phone: "555-0102",
+        loyaltyPoints: 75,
+    },
+    {
+        id: "CUST003",
+        type: "company",
+        firstName: "Charlie",
+        lastName: "Brown",
+        companyName: "Brown Enterprises",
+        email: "charlie@brownenterprises.com",
+        phone: "555-0103",
+    },
+    {
+        id: "CUST004",
+        type: "individual",
+        firstName: "Diana",
+        lastName: "Miller",
+        companyName: null,
+        email: "diana.m@email.com",
+        phone: "555-0104",
+        loyaltyPoints: 230,
+    },
+    {
+        id: "CUST005",
+        type: "company",
+        firstName: "Eva",
+        lastName: "Green",
+        companyName: "Green Goods Co.",
+        email: "eva@greengoods.co",
+        phone: "555-0105",
+    },
 ];
