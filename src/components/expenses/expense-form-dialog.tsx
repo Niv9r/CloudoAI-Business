@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { type Expense, type ExpenseFormValues, expenseFormSchema, type Vendor } from '@/lib/types';
 import { Separator } from '../ui/separator';
+import { Label } from '@/components/ui/label';
 
 interface ExpenseFormDialogProps {
   isOpen: boolean;
