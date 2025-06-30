@@ -15,6 +15,7 @@ export const productFormSchema = z.object({
   sku: z.string().min(3, { message: 'SKU must be at least 3 characters.' }),
   category: z.string().min(2, { message: 'Category is required.' }),
   price: z.coerce.number().min(0, { message: 'Price must be a positive number.' }),
+  cost: z.coerce.number().min(0, { message: 'Cost must be a positive number.' }).default(0),
   stock: z.coerce.number().int({ message: 'Stock must be a whole number.' }).min(0, { message: 'Stock cannot be negative.' }),
 });
 

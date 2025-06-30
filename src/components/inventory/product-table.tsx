@@ -21,12 +21,12 @@ interface ProductTableProps {
 
 export default function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col w-full">
       <CardHeader>
         <CardTitle>Products</CardTitle>
         <CardDescription>A list of all products in your inventory.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 overflow-auto">
+      <CardContent className="flex-1 overflow-auto p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -36,6 +36,7 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">Cost</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -54,6 +55,7 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
+                <TableCell className="text-right">${product.cost.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                    <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -72,7 +74,7 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   No products found.
                 </TableCell>
               </TableRow>

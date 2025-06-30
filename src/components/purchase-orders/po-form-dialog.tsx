@@ -92,9 +92,9 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Purchase Order' : 'Create New Purchase Order'}</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Draft PO' : 'Create New Draft PO'}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Update the details for this PO.' : 'Fill out the form to create a new PO.'}
+            {isEditMode ? 'Update the details for this draft PO.' : 'Fill out the form to create a new draft PO.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -193,7 +193,17 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
                           control={form.control}
                           name={`lineItems.${index}.productId`}
                           render={({ field }) => (
-                              <Select onValueChange={field.onChange} value={field.value}>
+                            <FormItem>
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  const product = products.find(p => p.id === value);
+                                  if (product) {
+                                      form.setValue(`lineItems.${index}.unitCost`, product.cost || 0);
+                                  }
+                                }} 
+                                value={field.value}
+                              >
                                   <FormControl>
                                   <SelectTrigger>
                                       <SelectValue placeholder="Select a product" />
@@ -205,6 +215,8 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
                                   ))}
                                   </SelectContent>
                               </Select>
+                              <FormMessage />
+                            </FormItem>
                           )}
                       />
                     </div>
@@ -212,14 +224,14 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
                         <FormField
                             control={form.control}
                             name={`lineItems.${index}.quantity`}
-                            render={({ field }) => <Input type="number" placeholder="Qty" {...field} />}
+                            render={({ field }) => <FormItem><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>}
                         />
                     </div>
                      <div className="w-full sm:w-32">
                         <FormField
                             control={form.control}
                             name={`lineItems.${index}.unitCost`}
-                            render={({ field }) => <Input type="number" step="0.01" placeholder="Unit Cost" {...field} />}
+                            render={({ field }) => <FormItem><FormControl><Input type="number" step="0.01" placeholder="Unit Cost" {...field} /></FormControl></FormItem>}
                         />
                     </div>
                     <div>
@@ -258,7 +270,7 @@ export default function PoFormDialog({ isOpen, onOpenChange, onSave, purchaseOrd
 
             <DialogFooter className='pt-4'>
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit">{isEditMode ? 'Save Changes' : 'Create PO'}</Button>
+              <Button type="submit">{isEditMode ? 'Save Draft' : 'Create Draft'}</Button>
             </DialogFooter>
           </form>
         </Form>

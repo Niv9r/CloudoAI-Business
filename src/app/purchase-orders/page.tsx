@@ -3,20 +3,33 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import type { PurchaseOrder, PurchaseOrderFormValues, Product } from '@/lib/types';
+import type { PurchaseOrder, PurchaseOrderFormValues } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
 import PurchaseOrdersLog from '@/components/purchase-orders/purchase-orders-log';
 import PoFormDialog from '@/components/purchase-orders/po-form-dialog';
 import ReceiveStockDialog from '@/components/purchase-orders/receive-stock-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function PurchaseOrdersPage() {
-  const { purchaseOrders, vendors, products, addPurchaseOrder, updatePurchaseOrder, receiveStock } = useInventory();
+  const { purchaseOrders, vendors, products, addPurchaseOrder, updatePurchaseOrder, receiveStock, issuePurchaseOrder, cancelPurchaseOrder } = useInventory();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [poToEdit, setPoToEdit] = useState<PurchaseOrder | null>(null);
 
   const [isReceiveOpen, setIsReceiveOpen] = useState(false);
   const [poToReceive, setPoToReceive] = useState<PurchaseOrder | null>(null);
+  
+  const [isCancelAlertOpen, setIsCancelAlertOpen] = useState(false);
+  const [poToCancel, setPoToCancel] = useState<PurchaseOrder | null>(null);
 
   const handleOpenAddDialog = () => {
     setPoToEdit(null);
@@ -48,6 +61,23 @@ export default function PurchaseOrdersPage() {
     setPoToReceive(po);
     setIsReceiveOpen(true);
   }
+  
+  const handleIssuePo = (po: PurchaseOrder) => {
+    issuePurchaseOrder(po.id);
+  }
+
+  const handleOpenCancelDialog = (po: PurchaseOrder) => {
+    setPoToCancel(po);
+    setIsCancelAlertOpen(true);
+  };
+  
+  const handleConfirmCancel = () => {
+    if (poToCancel) {
+      cancelPurchaseOrder(poToCancel.id);
+    }
+    setIsCancelAlertOpen(false);
+    setPoToCancel(null);
+  };
 
   const handleConfirmReceive = (receivedItems: { productId: string; quantityReceived: number }[]) => {
     if (poToReceive) {
@@ -58,7 +88,7 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full w-full flex-col gap-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Purchase Orders</h1>
@@ -75,6 +105,8 @@ export default function PurchaseOrdersPage() {
           vendors={vendors}
           onEdit={handleOpenEditDialog}
           onReceive={handleOpenReceiveDialog}
+          onIssue={handleIssuePo}
+          onCancel={handleOpenCancelDialog}
         />
       </div>
 
@@ -96,6 +128,28 @@ export default function PurchaseOrdersPage() {
             onConfirmReceive={handleConfirmReceive}
         />
       )}
+
+      {poToCancel && (
+        <AlertDialog open={isCancelAlertOpen} onOpenChange={setIsCancelAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action will cancel the Purchase Order {poToCancel.id}. This cannot be undone.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                <AlertDialogAction
+                    className='bg-destructive hover:bg-destructive/90'
+                    onClick={handleConfirmCancel}
+                >
+                    Yes, Cancel PO
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+       )}
     </div>
   );
 }

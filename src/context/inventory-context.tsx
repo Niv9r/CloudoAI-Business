@@ -15,6 +15,8 @@ interface InventoryContextType {
   deleteProduct: (productId: string) => void;
   addPurchaseOrder: (data: PurchaseOrderFormValues) => void;
   updatePurchaseOrder: (po: PurchaseOrder) => void;
+  issuePurchaseOrder: (poId: string) => void;
+  cancelPurchaseOrder: (poId: string) => void;
   receiveStock: (poId: string, receivedItems: { productId: string; quantityReceived: number }[]) => void;
   adjustStock: (data: StockAdjustmentFormValues) => void;
 }
@@ -70,16 +72,32 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         expectedDate: data.expectedDate.toISOString(),
         lineItems: data.lineItems.map(li => ({...li, quantityReceived: 0 })),
         total,
-        status: 'Ordered',
+        status: 'Draft',
     };
     setPurchaseOrders(prev => [newPO, ...prev]);
-    toast({ title: "Success", description: "Purchase Order created." });
+    toast({ title: "Success", description: "Draft Purchase Order created." });
   }, [toast]);
 
   const updatePurchaseOrder = useCallback((updatedPO: PurchaseOrder) => {
     const total = updatedPO.lineItems.reduce((acc, item) => acc + (item.quantity * item.unitCost), 0);
     setPurchaseOrders(prev => prev.map(po => po.id === updatedPO.id ? {...updatedPO, total} : po));
-    toast({ title: "Success", description: `PO ${updatedPO.id} updated.` });
+    toast({ title: "Success", description: `Draft PO ${updatedPO.id} updated.` });
+  }, [toast]);
+
+  const issuePurchaseOrder = useCallback((poId: string) => {
+    setPurchaseOrders(prev => prev.map(po => po.id === poId ? { ...po, status: 'Ordered' } : po));
+    toast({ title: "Purchase Order Issued", description: `PO ${poId} has been marked as Ordered.` });
+  }, [toast]);
+
+  const cancelPurchaseOrder = useCallback((poId: string) => {
+    setPurchaseOrders(prev => prev.map(po => {
+      if (po.id === poId) {
+        // Here you could add logic to revert stock if needed, for simplicity we just cancel
+        return { ...po, status: 'Cancelled' };
+      }
+      return po;
+    }));
+    toast({ variant: 'destructive', title: "Purchase Order Cancelled", description: `PO ${poId} has been cancelled.` });
   }, [toast]);
   
   const receiveStock = useCallback((poId: string, receivedItems: { productId: string, quantityReceived: number }[]) => {
@@ -162,9 +180,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     deleteProduct,
     addPurchaseOrder,
     updatePurchaseOrder,
+    issuePurchaseOrder,
+    cancelPurchaseOrder,
     receiveStock,
     adjustStock,
-  }), [products, purchaseOrders, vendors, stockAdjustments, addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, receiveStock, adjustStock]);
+  }), [products, purchaseOrders, vendors, stockAdjustments, addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock]);
 
   return (
     <InventoryContext.Provider value={value}>

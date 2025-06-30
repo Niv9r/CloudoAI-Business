@@ -8,6 +8,7 @@ export const products: Product[] = [
     category: "Coffee",
     stock: 120,
     price: 15.99,
+    cost: 9.50,
     status: "In Stock",
   },
   {
@@ -17,6 +18,7 @@ export const products: Product[] = [
     category: "Accessories",
     stock: 75,
     price: 49.99,
+    cost: 22.50,
     status: "In Stock",
   },
   {
@@ -26,6 +28,7 @@ export const products: Product[] = [
     category: "Apparel",
     stock: 0,
     price: 29.99,
+    cost: 14.00,
     status: "Out of Stock",
   },
   {
@@ -35,6 +38,7 @@ export const products: Product[] = [
     category: "Bags",
     stock: 25,
     price: 24.99,
+    cost: 11.00,
     status: "Low Stock",
   },
   {
@@ -44,6 +48,7 @@ export const products: Product[] = [
     category: "Accessories",
     stock: 40,
     price: 149.99,
+    cost: 65.00,
     status: "In Stock",
   },
    {
@@ -53,6 +58,7 @@ export const products: Product[] = [
     category: "Confectionery",
     stock: 200,
     price: 5.99,
+    cost: 2.50,
     status: "In Stock",
   },
   {
@@ -62,6 +68,7 @@ export const products: Product[] = [
     category: "Homeware",
     stock: 50,
     price: 19.99,
+    cost: 8.00,
     status: "In Stock",
   },
   {
@@ -71,6 +78,7 @@ export const products: Product[] = [
     category: "Tea",
     stock: 80,
     price: 12.50,
+    cost: 5.50,
     status: "In Stock",
   },
   {
@@ -80,6 +88,7 @@ export const products: Product[] = [
     category: "Lighting",
     stock: 15,
     price: 79.99,
+    cost: 35.00,
     status: "Low Stock",
   },
   {
@@ -89,6 +98,7 @@ export const products: Product[] = [
     category: "Electronics",
     stock: 60,
     price: 89.99,
+    cost: 42.00,
     status: "In Stock",
   },
 ];

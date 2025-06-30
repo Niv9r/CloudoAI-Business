@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { productFormSchema, type ProductFormValues, type Product } from '@/lib/types';
-import { Textarea } from '../ui/textarea';
 
 interface ProductFormDialogProps {
   isOpen: boolean;
@@ -41,6 +40,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
       sku: '',
       category: '',
       price: 0,
+      cost: 0,
       stock: 0,
     },
   });
@@ -55,6 +55,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
               sku: '',
               category: '',
               price: 0,
+              cost: 0,
               stock: 0,
             }
       );
@@ -118,7 +119,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
                 </FormItem>
               )}
             />
-            <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-3 gap-4'>
                 <FormField
                     control={form.control}
                     name="price"
@@ -126,7 +127,20 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
                         <FormItem>
                         <FormLabel>Price ($)</FormLabel>
                         <FormControl>
-                            <Input type="number" placeholder="15.99" {...field} />
+                            <Input type="number" step="0.01" placeholder="15.99" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="cost"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Cost ($)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="9.50" {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -137,7 +151,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
                     name="stock"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Stock Quantity</FormLabel>
+                        <FormLabel>Stock</FormLabel>
                         <FormControl>
                             <Input type="number" placeholder="120" {...field} />
                         </FormControl>

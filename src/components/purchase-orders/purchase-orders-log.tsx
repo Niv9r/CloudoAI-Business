@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MoreHorizontal, Truck } from "lucide-react";
+import { MoreHorizontal, Truck, Paperclip } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from "../ui/dropdown-menu";
 import { format } from 'date-fns';
@@ -22,9 +22,11 @@ interface PurchaseOrdersLogProps {
   vendors: Vendor[];
   onEdit: (po: PurchaseOrder) => void;
   onReceive: (po: PurchaseOrder) => void;
+  onIssue: (po: PurchaseOrder) => void;
+  onCancel: (po: PurchaseOrder) => void;
 }
 
-export default function PurchaseOrdersLog({ purchaseOrders, vendors, onEdit, onReceive }: PurchaseOrdersLogProps) {
+export default function PurchaseOrdersLog({ purchaseOrders, vendors, onEdit, onReceive, onIssue, onCancel }: PurchaseOrdersLogProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -41,17 +43,18 @@ export default function PurchaseOrdersLog({ purchaseOrders, vendors, onEdit, onR
         case 'Partially Received': return 'secondary';
         case 'Ordered': return 'outline';
         case 'Cancelled': return 'destructive';
+        case 'Draft': return 'secondary';
         default: return 'outline';
     }
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full w-full flex flex-col">
       <CardHeader>
         <CardTitle>PO History</CardTitle>
         <CardDescription>A log of all your purchase orders.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 overflow-auto">
+      <CardContent className="flex-1 overflow-auto p-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -89,15 +92,29 @@ export default function PurchaseOrdersLog({ purchaseOrders, vendors, onEdit, onR
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onEdit(po)}>Edit</DropdownMenuItem>
-                      {po.status !== 'Received' && po.status !== 'Cancelled' && (
+                      {po.status === 'Draft' && (
+                        <>
+                          <DropdownMenuItem onClick={() => onIssue(po)}>
+                            <Paperclip className="mr-2 h-4 w-4" />
+                            Issue PO
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onEdit(po)}>Edit</DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      {po.status !== 'Draft' && po.status !== 'Received' && po.status !== 'Cancelled' && (
                         <DropdownMenuItem onClick={() => onReceive(po)}>
                             <Truck className="mr-2 h-4 w-4" />
                             Receive Stock
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive focus:text-destructive">Cancel PO</DropdownMenuItem>
+                      
+                      {(po.status === 'Draft' || po.status === 'Ordered' || po.status === 'Partially Received') && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onCancel(po)} className="text-destructive focus:text-destructive">Cancel PO</DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
