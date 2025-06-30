@@ -1,10 +1,10 @@
 'use client';
 
-import { useActionState, useRef } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { useInventory } from '@/context/inventory-context';
-import { sales, expenses, vendors } from '@/lib/mock-data';
+import { useBusiness } from '@/context/business-context';
 import { handleGenerateInsights } from '@/ai/flows/generate-business-insights-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2, Sparkles, ShoppingCart, Package, Users, CreditCard, BrainCircuit } from 'lucide-react';
@@ -35,8 +35,14 @@ function SubmitButton() {
 }
 
 export default function InsightsPage() {
-  const { products } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts, getSales, getExpenses, getVendors } = useInventory();
   const [state, formAction] = useActionState(handleGenerateInsights, initialState);
+
+  const products = getProducts(selectedBusiness.id);
+  const sales = getSales(selectedBusiness.id);
+  const expenses = getExpenses(selectedBusiness.id);
+  const vendors = getVendors(selectedBusiness.id);
 
   const businessContext = JSON.stringify({
     products: products,
@@ -57,7 +63,7 @@ export default function InsightsPage() {
       </div>
 
       {!state.insights && (
-         <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed shadow-sm p-8 text-center">
+         <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
             <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
                 <Lightbulb className="h-10 w-10 text-primary" />
             </div>
