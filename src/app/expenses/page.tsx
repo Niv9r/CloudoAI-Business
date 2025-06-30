@@ -110,17 +110,17 @@ export default function ExpensesPage() {
 
   return (
     <>
-      <div className="flex w-full flex-col gap-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold font-headline tracking-tight">Expenses</h1>
-            <p className="text-muted-foreground">Track and manage your business expenses.</p>
-          </div>
-          <Button onClick={handleOpenAddDialog}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Expense
-          </Button>
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">Expenses</h1>
+          <p className="text-muted-foreground">Track and manage your business expenses.</p>
         </div>
+        <Button onClick={handleOpenAddDialog}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Expense
+        </Button>
+      </div>
+      <div className="flex-1 overflow-hidden">
         <ExpensesLog
           expenses={expenses}
           vendors={vendors}

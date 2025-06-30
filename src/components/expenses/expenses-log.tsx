@@ -46,12 +46,12 @@ export default function ExpensesLog({ expenses, vendors, onEdit, onDelete, onMar
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Expense History</CardTitle>
         <CardDescription>A log of all your recorded business expenses.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>

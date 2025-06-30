@@ -80,7 +80,7 @@ export default function SalesLog() {
 
   return (
     <>
-      <Card>
+      <Card className="h-full flex flex-col">
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>Search, filter, and review all sales and returns.</CardDescription>
@@ -117,7 +117,7 @@ export default function SalesLog() {
             </Button>
           )}
         </div>
-        <CardContent className="p-0">
+        <CardContent className="flex-1 p-0 overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>

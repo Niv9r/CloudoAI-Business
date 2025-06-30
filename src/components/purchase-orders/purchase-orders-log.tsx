@@ -46,12 +46,12 @@ export default function PurchaseOrdersLog({ purchaseOrders, vendors, onEdit, onR
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>PO History</CardTitle>
         <CardDescription>A log of all your purchase orders.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>

@@ -21,12 +21,12 @@ interface ProductTableProps {
 
 export default function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Products</CardTitle>
         <CardDescription>A list of all products in your inventory.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -65,7 +65,7 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => onEdit(product)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDelete(product)} className="text-destructive">Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDelete(product)} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
