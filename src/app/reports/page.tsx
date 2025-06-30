@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfYear, format, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, endOfYear, format, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SalesSummaryReport from '@/components/reports/sales-summary-report';
@@ -125,7 +125,7 @@ export default function ReportsPage() {
             acc.totalCostValue += p.stock * p.cost;
             acc.totalRetailValue += p.stock * p.price;
             return acc;
-        }, { totalUnits: 0, totalCostValue: 0, totalRetailValue: 0 });
+        }, { totalUnits: 0, totalCostValue: 0, totalRetailValue: 0, potentialProfit: 0 });
         invSummary.potentialProfit = invSummary.totalRetailValue - invSummary.totalCostValue;
 
         doc.addPage();
