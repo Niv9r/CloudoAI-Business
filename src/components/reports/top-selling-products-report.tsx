@@ -4,11 +4,12 @@
 import { useMemo } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { startOfDay, endOfDay } from 'date-fns';
-import { sales } from '@/lib/mock-data';
 import type { SaleLineItem } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
 
 interface TopSellingProductsReportProps {
   dateRange: DateRange | undefined;
@@ -22,6 +23,10 @@ interface ProductSalesInfo {
 }
 
 export default function TopSellingProductsReport({ dateRange }: TopSellingProductsReportProps) {
+    const { selectedBusiness } = useBusiness();
+    const { getSales } = useInventory();
+    const sales = getSales(selectedBusiness.id);
+
     const productSales = useMemo(() => {
         const filteredSales = sales.filter(sale => {
             const saleDate = new Date(sale.timestamp);
@@ -51,7 +56,7 @@ export default function TopSellingProductsReport({ dateRange }: TopSellingProduc
         
         return Object.values(productMap).sort((a, b) => b.unitsSold - a.unitsSold);
 
-    }, [dateRange]);
+    }, [dateRange, sales]);
 
     return (
         <Card className="h-full w-full flex flex-col">

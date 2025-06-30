@@ -16,6 +16,7 @@ import { handleSuggestReorder } from '@/ai/flows/suggest-reorder-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Lightbulb, Loader2, Package, AlertCircle } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
 import type { Product } from '@/lib/types';
 
 const initialState = {
@@ -39,7 +40,9 @@ function SubmitButton() {
 }
 
 export default function SmartReorder() {
-  const { products } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts } = useInventory();
+  const products = getProducts(selectedBusiness.id);
   
   const handleSuggestReorderWithProducts = (prevState: any, formData: FormData) => {
     const productsData = products.map(p => ({

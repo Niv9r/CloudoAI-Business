@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { expenses as mockExpenses, vendors as mockVendors } from "@/lib/mock-data";
 import type { Expense, ExpenseFormValues, Vendor } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -18,11 +17,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import ExpensesLog from "@/components/expenses/expenses-log";
 import ExpenseFormDialog from "@/components/expenses/expense-form-dialog";
+import { useBusiness } from "@/context/business-context";
+import { useInventory } from "@/context/inventory-context";
 
 export default function ExpensesPage() {
   const { toast } = useToast();
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
-  const [vendors] = useState<Vendor[]>(mockVendors);
+  const { selectedBusiness } = useBusiness();
+  const { getExpenses, getVendors, addExpense, updateExpense, deleteExpense, markExpenseAsPaid } = useInventory();
+  
+  const expenses = getExpenses(selectedBusiness.id);
+  const vendors = getVendors(selectedBusiness.id);
 
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
@@ -30,46 +34,11 @@ export default function ExpensesPage() {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
-  const getStatus = (expense: Omit<Expense, 'status' | 'id' | 'total' | 'lineItems'> & {dueDate: Date}): Expense['status'] => {
-      if (new Date(expense.dueDate) < new Date()) return 'Overdue';
-      return 'Pending';
-  }
-
   const handleSaveExpense = (data: ExpenseFormValues) => {
-    const total = data.lineItems.reduce((acc, item) => acc + item.amount, 0);
-
     if (expenseToEdit) {
-      // Update existing expense
-      const updatedExpense: Expense = {
-        ...expenseToEdit,
-        ...data,
-        issueDate: data.issueDate.toISOString(),
-        dueDate: data.dueDate.toISOString(),
-        lineItems: data.lineItems.map((li, index) => ({ ...li, id: expenseToEdit.lineItems[index]?.id || `LI-${Date.now()}`})),
-        total,
-      };
-      if(updatedExpense.status !== 'Paid'){
-        updatedExpense.status = getStatus(updatedExpense);
-      }
-      setExpenses(expenses.map(e => e.id === expenseToEdit.id ? updatedExpense : e));
-      toast({ title: "Success", description: "Expense updated successfully." });
+      updateExpense(selectedBusiness.id, { ...expenseToEdit, ...data });
     } else {
-      // Add new expense
-      const newExpenseData = {
-        ...data,
-        issueDate: data.issueDate.toISOString(),
-        dueDate: data.dueDate.toISOString(),
-      }
-      const newExpense: Expense = {
-        id: `EXP${Date.now()}`,
-        ...newExpenseData,
-        lineItems: data.lineItems.map(li => ({ ...li, id: `LI-${Date.now()}`})),
-        total,
-        status: getStatus(data)
-      };
-      
-      setExpenses([newExpense, ...expenses]);
-      toast({ title: "Success", description: "Expense added successfully." });
+      addExpense(selectedBusiness.id, data);
     }
     setExpenseToEdit(null);
     setIsFormDialogOpen(false);
@@ -91,18 +60,12 @@ export default function ExpensesPage() {
   }
   
   const handleMarkAsPaid = (expenseId: string) => {
-    setExpenses(expenses.map(e => e.id === expenseId ? { ...e, status: 'Paid' } : e));
-    toast({ title: "Status Updated", description: "Expense marked as paid." });
+    markExpenseAsPaid(selectedBusiness.id, expenseId);
   }
 
   const handleConfirmDelete = () => {
     if (expenseToDelete) {
-        setExpenses(expenses.filter(e => e.id !== expenseToDelete.id));
-        toast({
-            variant: "destructive",
-            title: "Expense Deleted",
-            description: `Expense from "${vendors.find(v => v.id === expenseToDelete.vendorId)?.name}" has been removed.`,
-        });
+        deleteExpense(selectedBusiness.id, expenseToDelete.id);
     }
     setIsAlertOpen(false);
     setExpenseToDelete(null);
@@ -122,6 +85,7 @@ export default function ExpensesPage() {
       </div>
       <div className="flex-1 overflow-hidden">
         <ExpensesLog
+          key={selectedBusiness.id}
           expenses={expenses}
           vendors={vendors}
           onEdit={handleOpenEditDialog}

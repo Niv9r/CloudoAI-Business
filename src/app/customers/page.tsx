@@ -17,9 +17,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useBusiness } from '@/context/business-context';
 
 export default function CustomersPage() {
-  const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomer();
+  const { selectedBusiness } = useBusiness();
+  const { getCustomers, addCustomer, updateCustomer, deleteCustomer } = useCustomer();
+  const customers = getCustomers(selectedBusiness.id);
+  
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
 
@@ -28,9 +32,9 @@ export default function CustomersPage() {
 
   const handleSaveCustomer = (data: CustomerFormValues) => {
     if (customerToEdit) {
-      updateCustomer({ ...customerToEdit, ...data });
+      updateCustomer(selectedBusiness.id, { ...customerToEdit, ...data });
     } else {
-      addCustomer(data);
+      addCustomer(selectedBusiness.id, data);
     }
     setCustomerToEdit(null);
     setIsFormDialogOpen(false);
@@ -53,7 +57,7 @@ export default function CustomersPage() {
 
   const handleConfirmDelete = () => {
     if (customerToDelete) {
-      deleteCustomer(customerToDelete.id);
+      deleteCustomer(selectedBusiness.id, customerToDelete.id);
     }
     setIsAlertOpen(false);
     setCustomerToDelete(null);
@@ -73,6 +77,7 @@ export default function CustomersPage() {
       </div>
       <div className="flex-1 overflow-hidden">
         <CustomerTable
+          key={selectedBusiness.id}
           customers={customers}
           onEdit={handleOpenEditDialog}
           onDelete={handleOpenDeleteDialog}

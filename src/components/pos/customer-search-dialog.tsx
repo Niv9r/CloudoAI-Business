@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, UserPlus } from 'lucide-react';
 import { Button } from '../ui/button';
+import { useBusiness } from '@/context/business-context';
 
 interface CustomerSearchDialogProps {
   isOpen: boolean;
@@ -27,7 +28,9 @@ export default function CustomerSearchDialog({
   onOpenChange,
   onSelectCustomer,
 }: CustomerSearchDialogProps) {
-  const { customers } = useCustomer();
+  const { selectedBusiness } = useBusiness();
+  const { getCustomers } = useCustomer();
+  const customers = getCustomers(selectedBusiness.id);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredCustomers = customers.filter(

@@ -4,10 +4,15 @@
 import { useMemo } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { startOfDay, endOfDay } from 'date-fns';
-import { sales as allSales } from '@/lib/mock-data';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Pie, PieChart, Cell, Tooltip } from 'recharts';
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltipContent } from '@/components/ui/chart';
+import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
+
+interface PaymentMethodsReportProps {
+  dateRange: DateRange | undefined;
+}
 
 const chartConfig = {
   total: {
@@ -28,6 +33,10 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function PaymentMethodsReport({ dateRange }: PaymentMethodsReportProps) {
+  const { selectedBusiness } = useBusiness();
+  const { getSales } = useInventory();
+  const allSales = getSales(selectedBusiness.id);
+
   const chartData = useMemo(() => {
     const filteredSales = allSales.filter(sale => {
       const saleDate = new Date(sale.timestamp);
@@ -48,7 +57,7 @@ export default function PaymentMethodsReport({ dateRange }: PaymentMethodsReport
 
     return Object.values(paymentData).sort((a,b) => b.total - a.total);
 
-  }, [dateRange]);
+  }, [dateRange, allSales]);
 
   return (
     <Card>

@@ -4,12 +4,13 @@
 import { useMemo } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { startOfDay, endOfDay, format, eachDayOfInterval } from 'date-fns';
-import { sales } from '@/lib/mock-data';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { DollarSign, Hash, ShoppingCart, Receipt } from 'lucide-react';
 import KpiCard from '../dashboard/kpi-card';
 import { Bar, BarChart, XAxis, YAxis, Tooltip } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
 
 interface SalesSummaryReportProps {
   dateRange: DateRange | undefined;
@@ -23,6 +24,10 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function SalesSummaryReport({ dateRange }: SalesSummaryReportProps) {
+  const { selectedBusiness } = useBusiness();
+  const { getSales } = useInventory();
+  const sales = getSales(selectedBusiness.id);
+
   const { summary, chartData } = useMemo(() => {
     const filteredSales = sales.filter(sale => {
       const saleDate = new Date(sale.timestamp);
@@ -48,7 +53,7 @@ export default function SalesSummaryReport({ dateRange }: SalesSummaryReportProp
     const totalDiscounts = filteredSales.reduce((acc, sale) => acc + sale.discount, 0);
     const netSales = grossSales - totalDiscounts;
     const totalOrders = filteredSales.length;
-    const averageOrderValue = netSales / totalOrders;
+    const averageOrderValue = totalOrders > 0 ? netSales / totalOrders : 0;
 
     const summary = {
       grossSales,
@@ -76,7 +81,7 @@ export default function SalesSummaryReport({ dateRange }: SalesSummaryReportProp
 
 
     return { summary, chartData };
-  }, [dateRange]);
+  }, [dateRange, sales]);
 
   const kpis = [
     { title: "Gross Sales", value: `$${summary.grossSales.toFixed(2)}`, change: "Total revenue before discounts", icon: <DollarSign className="h-6 w-6 text-primary" /> },

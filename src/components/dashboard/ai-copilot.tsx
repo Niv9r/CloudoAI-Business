@@ -4,7 +4,8 @@ import { useEffect, useRef, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { handleBusinessCopilotQuery } from '@/ai/flows/business-copilot-flow';
 import { useInventory } from '@/context/inventory-context';
-import { sales, expenses } from '@/lib/mock-data'; // Using mock data for now
+import { useCustomer } from '@/context/customer-context';
+import { useBusiness } from '@/context/business-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -36,15 +37,19 @@ function SubmitButton() {
 }
 
 export default function AiCopilot() {
-  const { products } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts, getSales, getExpenses } = useInventory();
+  const { getCustomers } = useCustomer();
+
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction] = useActionState(handleBusinessCopilotQuery, initialState);
 
   const businessContext = JSON.stringify({
-    products: products.slice(0, 10), // Limit context size for now
-    sales: sales.slice(0, 10),
-    expenses: expenses.slice(0, 10),
+    products: getProducts(selectedBusiness.id).slice(0, 10),
+    sales: getSales(selectedBusiness.id).slice(0, 10),
+    expenses: getExpenses(selectedBusiness.id).slice(0, 10),
+    customers: getCustomers(selectedBusiness.id).slice(0,10),
   });
 
   useEffect(() => {
@@ -78,7 +83,7 @@ export default function AiCopilot() {
       </CardHeader>
       <CardContent className="space-y-4">
         <form ref={formRef} action={formAction} className="flex items-center gap-2">
-          <Input name="query" placeholder="e.g., What were my total expenses last month?" required />
+          <Input name="query" placeholder="e.g., Who is my top performing employee?" required />
           <input type="hidden" name="businessContext" value={businessContext} />
           <SubmitButton />
         </form>

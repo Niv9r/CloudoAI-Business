@@ -3,13 +3,14 @@
 
 import { useMemo } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { startOfDay, endOfDay, format } from 'date-fns';
-import { expenses as allExpenses, vendors } from '@/lib/mock-data';
+import { startOfDay, endOfDay } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { DollarSign, Hash } from 'lucide-react';
 import KpiCard from '../dashboard/kpi-card';
 import { Bar, BarChart, XAxis, YAxis, Tooltip } from 'recharts';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
 
 interface ExpenseBreakdownReportProps {
   dateRange: DateRange | undefined;
@@ -23,6 +24,11 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function ExpenseBreakdownReport({ dateRange }: ExpenseBreakdownReportProps) {
+  const { selectedBusiness } = useBusiness();
+  const { getExpenses, getVendors } = useInventory();
+  const allExpenses = getExpenses(selectedBusiness.id);
+  const vendors = getVendors(selectedBusiness.id);
+
   const { summary, chartData } = useMemo(() => {
     const filteredExpenses = allExpenses.filter(expense => {
       const expenseDate = new Date(expense.issueDate);
@@ -55,7 +61,7 @@ export default function ExpenseBreakdownReport({ dateRange }: ExpenseBreakdownRe
         }, 
         chartData 
     };
-  }, [dateRange]);
+  }, [dateRange, allExpenses, vendors]);
 
   const kpis = [
     { title: "Total Spent", value: `$${summary.totalSpent.toFixed(2)}`, change: "Total expenses in this period", icon: <DollarSign className="h-6 w-6 text-primary" /> },

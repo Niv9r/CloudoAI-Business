@@ -1,9 +1,14 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import SalesLog from "@/components/sales/sales-log";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
+import { useBusiness } from "@/context/business-context";
 
 export default function SalesPage() {
+  const { selectedBusiness } = useBusiness();
+  
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -18,7 +23,7 @@ export default function SalesPage() {
           </Button>
         </Link>
       </div>
-      <SalesLog />
+      <SalesLog key={selectedBusiness.id}/>
     </div>
   );
 }

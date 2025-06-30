@@ -2,40 +2,53 @@
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
 import type { Customer, CustomerFormValues } from '@/lib/types';
-import { customers as mockCustomers } from '@/lib/mock-data';
+import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerContextType {
-  customers: Customer[];
-  addCustomer: (data: CustomerFormValues) => void;
-  updateCustomer: (customer: Customer) => void;
-  deleteCustomer: (customerId: string) => void;
+  getCustomers: (businessId: string) => Customer[];
+  addCustomer: (businessId: string, data: CustomerFormValues) => void;
+  updateCustomer: (businessId: string, customer: Customer) => void;
+  deleteCustomer: (businessId: string, customerId: string) => void;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [allCustomers, setAllCustomers] = useState<Record<string, Customer[]>>(mockDb.customers);
 
-  const addCustomer = useCallback((data: CustomerFormValues) => {
+  const getCustomers = useCallback((businessId: string) => {
+    return allCustomers[businessId] || [];
+  }, [allCustomers]);
+
+  const addCustomer = useCallback((businessId: string, data: CustomerFormValues) => {
     const newCustomer: Customer = {
       id: `CUST${Date.now()}`,
       ...data,
       loyaltyPoints: data.loyaltyPoints || 0,
     };
-    setCustomers(prev => [...prev, newCustomer]);
+    setAllCustomers(prev => ({
+        ...prev,
+        [businessId]: [...(prev[businessId] || []), newCustomer]
+    }));
     toast({ title: "Success", description: "Customer added successfully." });
   }, [toast]);
 
-  const updateCustomer = useCallback((updatedCustomer: Customer) => {
-    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+  const updateCustomer = useCallback((businessId: string, updatedCustomer: Customer) => {
+    setAllCustomers(prev => ({
+        ...prev,
+        [businessId]: (prev[businessId] || []).map(c => c.id === updatedCustomer.id ? updatedCustomer : c)
+    }));
     toast({ title: "Success", description: "Customer updated successfully." });
   }, [toast]);
 
-  const deleteCustomer = useCallback((customerId: string) => {
-    const customerToDelete = customers.find(c => c.id === customerId);
-    setCustomers(prev => prev.filter(c => c.id !== customerId));
+  const deleteCustomer = useCallback((businessId: string, customerId: string) => {
+    const customerToDelete = (allCustomers[businessId] || []).find(c => c.id === customerId);
+    setAllCustomers(prev => ({
+        ...prev,
+        [businessId]: (prev[businessId] || []).filter(c => c.id !== customerId)
+    }));
     if (customerToDelete) {
         toast({
             variant: "destructive",
@@ -43,14 +56,14 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
             description: `"${customerToDelete.firstName} ${customerToDelete.lastName}" has been removed.`,
         });
     }
-  }, [customers, toast]);
+  }, [allCustomers, toast]);
 
   const value = useMemo(() => ({
-    customers,
+    getCustomers,
     addCustomer,
     updateCustomer,
     deleteCustomer,
-  }), [customers, addCustomer, updateCustomer, deleteCustomer]);
+  }), [getCustomers, addCustomer, updateCustomer, deleteCustomer]);
 
   return (
     <CustomerContext.Provider value={value}>

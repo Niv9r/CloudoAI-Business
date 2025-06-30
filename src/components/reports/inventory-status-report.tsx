@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Pie, PieChart, Cell, Tooltip } from 'recharts';
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltipContent } from '@/components/ui/chart';
 import type { Product } from '@/lib/types';
+import { useBusiness } from '@/context/business-context';
 
 const chartConfig = {
   count: {
@@ -28,7 +29,9 @@ const chartConfig = {
 
 
 export default function InventoryStatusReport() {
-    const { products } = useInventory();
+    const { selectedBusiness } = useBusiness();
+    const { getProducts } = useInventory();
+    const products = getProducts(selectedBusiness.id);
 
     const chartData = useMemo(() => {
         const statusMap: Record<Product['status'], { key: string, label: string }> = {

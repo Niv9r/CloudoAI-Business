@@ -17,10 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useInventory } from "@/context/inventory-context";
+import { useBusiness } from "@/context/business-context";
 
 
 export default function InventoryPage() {
-  const { products, addProduct, updateProduct, deleteProduct } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts, addProduct, updateProduct, deleteProduct } = useInventory();
+  const products = getProducts(selectedBusiness.id);
+
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
@@ -29,9 +33,9 @@ export default function InventoryPage() {
 
   const handleSaveProduct = (data: ProductFormValues) => {
     if (productToEdit) {
-      updateProduct({ ...productToEdit, ...data });
+      updateProduct(selectedBusiness.id, { ...productToEdit, ...data });
     } else {
-      addProduct(data);
+      addProduct(selectedBusiness.id, data);
     }
     setProductToEdit(null);
     setIsFormDialogOpen(false);
@@ -54,7 +58,7 @@ export default function InventoryPage() {
 
   const handleConfirmDelete = () => {
     if (productToDelete) {
-        deleteProduct(productToDelete.id);
+        deleteProduct(selectedBusiness.id, productToDelete.id);
     }
     setIsAlertOpen(false);
     setProductToDelete(null);
@@ -73,7 +77,12 @@ export default function InventoryPage() {
         </Button>
       </div>
       <div className="flex-1 overflow-hidden">
-        <ProductTable products={products} onEdit={handleOpenEditDialog} onDelete={handleOpenDeleteDialog} />
+        <ProductTable 
+            key={selectedBusiness.id} 
+            products={products} 
+            onEdit={handleOpenEditDialog} 
+            onDelete={handleOpenDeleteDialog} 
+        />
       </div>
 
       <ProductFormDialog

@@ -1,24 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Bar, BarChart, XAxis, YAxis, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-
-const chartDataTemplate = [
-  { name: 'Jan', total: 0 },
-  { name: 'Feb', total: 0 },
-  { name: 'Mar', total: 0 },
-  { name: 'Apr', total: 0 },
-  { name: 'May', total: 0 },
-  { name: 'Jun', total: 0 },
-  { name: 'Jul', total: 0 },
-  { name: 'Aug', total: 0 },
-  { name: 'Sep', total: 0 },
-  { name: 'Oct', total: 0 },
-  { name: 'Nov', total: 0 },
-  { name: 'Dec', total: 0 },
-];
+import { useBusiness } from '@/context/business-context';
+import { useInventory } from '@/context/inventory-context';
+import { format } from 'date-fns';
 
 const chartConfig = {
   total: {
@@ -28,17 +16,26 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function SalesChart() {
-  const [data, setData] = useState(chartDataTemplate);
+  const { selectedBusiness } = useBusiness();
+  const { getSales } = useInventory();
 
-  useEffect(() => {
-    // This runs only on the client, after hydration
-    setData(
-      chartDataTemplate.map((d) => ({
-        ...d,
-        total: Math.floor(Math.random() * 5000) + 1000,
-      }))
-    );
-  }, []);
+  const data = useMemo(() => {
+    const sales = getSales(selectedBusiness.id);
+    const monthlySales = sales.reduce((acc, sale) => {
+      const month = format(new Date(sale.timestamp), 'MMM');
+      if (!acc[month]) {
+        acc[month] = 0;
+      }
+      acc[month] += sale.total;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return allMonths.map(month => ({
+      name: month,
+      total: monthlySales[month] || 0
+    }));
+  }, [selectedBusiness.id, getSales]);
 
   return (
     <Card>

@@ -6,9 +6,12 @@ import { useInventory } from '@/context/inventory-context';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useBusiness } from '@/context/business-context';
 
 export default function InventoryValuationReport() {
-    const { products } = useInventory();
+    const { selectedBusiness } = useBusiness();
+    const { getProducts } = useInventory();
+    const products = getProducts(selectedBusiness.id);
 
     const summary = useMemo(() => {
         const totalUnits = products.reduce((acc, p) => acc + p.stock, 0);

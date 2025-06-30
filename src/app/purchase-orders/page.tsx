@@ -18,9 +18,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useBusiness } from '@/context/business-context';
 
 export default function PurchaseOrdersPage() {
-  const { purchaseOrders, vendors, products, addPurchaseOrder, updatePurchaseOrder, receiveStock, issuePurchaseOrder, cancelPurchaseOrder } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { 
+    getPurchaseOrders, 
+    getVendors, 
+    getProducts, 
+    addPurchaseOrder, 
+    updatePurchaseOrder, 
+    receiveStock, 
+    issuePurchaseOrder, 
+    cancelPurchaseOrder 
+  } = useInventory();
+
+  const purchaseOrders = getPurchaseOrders(selectedBusiness.id);
+  const vendors = getVendors(selectedBusiness.id);
+  const products = getProducts(selectedBusiness.id);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [poToEdit, setPoToEdit] = useState<PurchaseOrder | null>(null);
@@ -49,9 +64,9 @@ export default function PurchaseOrdersPage() {
         issueDate: data.issueDate.toISOString(),
         expectedDate: data.expectedDate.toISOString(),
       };
-      updatePurchaseOrder(updatedPO);
+      updatePurchaseOrder(selectedBusiness.id, updatedPO);
     } else {
-      addPurchaseOrder(data);
+      addPurchaseOrder(selectedBusiness.id, data);
     }
     setIsFormOpen(false);
     setPoToEdit(null);
@@ -63,7 +78,7 @@ export default function PurchaseOrdersPage() {
   }
   
   const handleIssuePo = (po: PurchaseOrder) => {
-    issuePurchaseOrder(po.id);
+    issuePurchaseOrder(selectedBusiness.id, po.id);
   }
 
   const handleOpenCancelDialog = (po: PurchaseOrder) => {
@@ -73,7 +88,7 @@ export default function PurchaseOrdersPage() {
   
   const handleConfirmCancel = () => {
     if (poToCancel) {
-      cancelPurchaseOrder(poToCancel.id);
+      cancelPurchaseOrder(selectedBusiness.id, poToCancel.id);
     }
     setIsCancelAlertOpen(false);
     setPoToCancel(null);
@@ -81,7 +96,7 @@ export default function PurchaseOrdersPage() {
 
   const handleConfirmReceive = (receivedItems: { productId: string; quantityReceived: number }[]) => {
     if (poToReceive) {
-      receiveStock(poToReceive.id, receivedItems);
+      receiveStock(selectedBusiness.id, poToReceive.id, receivedItems);
     }
     setIsReceiveOpen(false);
     setPoToReceive(null);
@@ -101,6 +116,7 @@ export default function PurchaseOrdersPage() {
       </div>
       <div className="flex-1 overflow-hidden">
         <PurchaseOrdersLog
+          key={selectedBusiness.id}
           purchaseOrders={purchaseOrders}
           vendors={vendors}
           onEdit={handleOpenEditDialog}

@@ -5,7 +5,6 @@ import type { CartItem, Product, Customer, Discount, HeldOrder, Shift, Sale } fr
 import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
 import { useInventory } from '@/context/inventory-context';
-import { sales as mockSales } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Archive, LogOut } from 'lucide-react';
@@ -13,9 +12,15 @@ import ChargeDialog from '@/components/pos/charge-dialog';
 import CustomerSearchDialog from '@/components/pos/customer-search-dialog';
 import HeldOrdersDialog from '@/components/pos/held-orders-dialog';
 import ShiftManagementDialog from '@/components/pos/shift-management-dialog';
+import { useBusiness } from '@/context/business-context';
 
 export default function PosPage() {
-  const { products } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts, getSales, addSale, getShifts, addShift, endShift: endShiftInContext } = useInventory();
+  
+  const products = getProducts(selectedBusiness.id);
+  const sales = getSales(selectedBusiness.id);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
@@ -29,12 +34,19 @@ export default function PosPage() {
   const [salesThisShift, setSalesThisShift] = useState<Sale[]>([]);
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(true);
 
-  // Mock previous sales to show in shift summary
+  // Load active shift or prompt to start a new one
   useEffect(() => {
-    if(currentShift) {
-        setSalesThisShift(mockSales.slice(0, 2));
+    const activeShift = getShifts(selectedBusiness.id).find(s => s.status === 'open');
+    if (activeShift) {
+      setCurrentShift(activeShift);
+      const shiftSales = sales.filter(sale => new Date(sale.timestamp) >= new Date(activeShift.startTime));
+      setSalesThisShift(shiftSales);
+      setIsShiftDialogOpen(false);
+    } else {
+      setCurrentShift(null);
+      setIsShiftDialogOpen(true);
     }
-  }, [currentShift]);
+  }, [selectedBusiness.id, getShifts, sales]);
 
 
   const handleAddToCart = (product: Product) => {
@@ -90,7 +102,8 @@ export default function PosPage() {
       setDiscount(null);
   }
 
-  const handleSaleComplete = (newSale: Sale) => {
+  const handleSaleComplete = (newSaleData: Omit<Sale, 'id' | 'employee'>) => {
+    const newSale = addSale(selectedBusiness.id, newSaleData);
     setSalesThisShift(prev => [...prev, newSale]);
     handleClearSale();
     setIsChargeModalOpen(false);
@@ -148,27 +161,14 @@ export default function PosPage() {
   
   // --- Shift Management Handlers ---
   const handleStartShift = (startingFloat: number) => {
-    const newShift: Shift = {
-      id: `SHIFT-${Date.now()}`,
-      employeeId: 'Admin User', // Hardcoded for now
-      startTime: new Date().toISOString(),
-      startingCashFloat: startingFloat,
-      status: 'open',
-    };
+    const newShift = addShift(selectedBusiness.id, startingFloat);
     setCurrentShift(newShift);
     setIsShiftDialogOpen(false);
   };
 
-  const handleEndShift = (actualCash: number) => {
+  const handleEndShift = (actualCash: number, notes?: string) => {
     if(currentShift) {
-        const updatedShift = {
-            ...currentShift,
-            endTime: new Date().toISOString(),
-            status: 'closed' as Shift['status'],
-            actualCashTotal: actualCash,
-        }
-        // In a real app, you would save this to the database
-        console.log("Shift Ended:", updatedShift);
+        endShiftInContext(selectedBusiness.id, currentShift.id, actualCash, salesThisShift, notes);
         setCurrentShift(null);
         setSalesThisShift([]);
         setIsShiftDialogOpen(true);
@@ -179,6 +179,7 @@ export default function PosPage() {
   if (!currentShift) {
     return (
         <ShiftManagementDialog
+            key={selectedBusiness.id}
             mode="start"
             onStartShift={handleStartShift}
             isOpen={isShiftDialogOpen}

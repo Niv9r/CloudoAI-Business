@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import KpiCard from "@/components/dashboard/kpi-card";
 import RecentSales from "@/components/dashboard/recent-sales";
 import SalesChart from "@/components/dashboard/sales-chart";
@@ -8,37 +7,38 @@ import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
 import AiCopilot from '@/components/dashboard/ai-copilot';
 import { useBusiness } from '@/context/business-context';
+import { useInventory } from "@/context/inventory-context";
+import { useCustomer } from "@/context/customer-context";
 import { DollarSign, ShoppingCart, Users, Wallet } from "lucide-react";
-
-const kpiData: Record<string, { title: string; value: string; change: string; icon: JSX.Element }[]> = {
-  biz_1: [
-    { title: "Gross Revenue", value: "$45,231.89", change: "+20.1% from last month", icon: <DollarSign className="h-6 w-6 text-primary" /> },
-    { title: "Net Profit", value: "$12,873.21", change: "+15.2% from last month", icon: <Wallet className="h-6 w-6 text-primary" /> },
-    { title: "Sales Count", value: "+12,234", change: "+19% from last month", icon: <ShoppingCart className="h-6 w-6 text-primary" /> },
-    { title: "Customer Count", value: "+972", change: "+11.4% from last month", icon: <Users className="h-6 w-6 text-primary" /> },
-  ],
-  biz_2: [
-    { title: "Gross Revenue", value: "$89,120.50", change: "+5.5% from last month", icon: <DollarSign className="h-6 w-6 text-primary" /> },
-    { title: "Net Profit", value: "$25,400.75", change: "+2.1% from last month", icon: <Wallet className="h-6 w-6 text-primary" /> },
-    { title: "Sales Count", value: "+25,812", change: "+8% from last month", icon: <ShoppingCart className="h-6 w-6 text-primary" /> },
-    { title: "Customer Count", value: "+1,504", change: "+3.2% from last month", icon: <Users className="h-6 w-6 text-primary" /> },
-  ],
-  biz_3: [
-    { title: "Gross Revenue", value: "£22,450.10", change: "-2.3% from last month", icon: <DollarSign className="h-6 w-6 text-primary" /> },
-    { title: "Net Profit", value: "£5,190.40", change: "-8.9% from last month", icon: <Wallet className="h-6 w-6 text-primary" /> },
-    { title: "Sales Count", value: "+4,109", change: "+1.5% from last month", icon: <ShoppingCart className="h-6 w-6 text-primary" /> },
-    { title: "Customer Count", value: "+315", change: "+0.8% from last month", icon: <Users className="h-6 w-6 text-primary" /> },
-  ],
-};
-
+import { useMemo } from "react";
 
 export default function Home() {
   const { selectedBusiness } = useBusiness();
-  const [currentKpis, setCurrentKpis] = useState(kpiData[selectedBusiness.id] || kpiData.biz_1);
+  const { getSales, getProducts } = useInventory();
+  const { getCustomers } = useCustomer();
 
-  useEffect(() => {
-    setCurrentKpis(kpiData[selectedBusiness.id] || kpiData.biz_1);
-  }, [selectedBusiness]);
+  const sales = useMemo(() => getSales(selectedBusiness.id), [selectedBusiness.id, getSales]);
+  const customers = useMemo(() => getCustomers(selectedBusiness.id), [selectedBusiness.id, getCustomers]);
+  const products = useMemo(() => getProducts(selectedBusiness.id), [selectedBusiness.id, getProducts]);
+
+  const kpis = useMemo(() => {
+    const grossRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+    const netProfit = sales.reduce((acc, sale) => acc + (sale.total - sale.lineItems.reduce((itemAcc, item) => {
+        const product = products.find(p => p.id === item.productId);
+        return itemAcc + (product ? product.cost * item.quantity : 0);
+    }, 0)), 0);
+    const salesCount = sales.length;
+    const customerCount = customers.length;
+    
+    return [
+      { title: "Gross Revenue", value: `$${grossRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: "+20.1% from last month", icon: <DollarSign className="h-6 w-6 text-primary" /> },
+      { title: "Net Profit", value: `$${netProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, change: "+15.2% from last month", icon: <Wallet className="h-6 w-6 text-primary" /> },
+      { title: "Sales Count", value: `+${salesCount.toLocaleString()}`, change: "+19% from last month", icon: <ShoppingCart className="h-6 w-6 text-primary" /> },
+      { title: "Customer Count", value: `+${customerCount.toLocaleString()}`, change: "+11.4% from last month", icon: <Users className="h-6 w-6 text-primary" /> },
+    ];
+
+  }, [sales, customers, products]);
+
 
   return (
     <div className="flex h-full w-full flex-col gap-8">
@@ -48,11 +48,11 @@ export default function Home() {
       </div>
 
       <div className="w-full">
-        <AiCopilot />
+        <AiCopilot key={selectedBusiness.id} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {currentKpis.map(kpi => (
+        {kpis.map(kpi => (
            <KpiCard key={kpi.title} title={kpi.title} value={kpi.value} change={kpi.change} icon={kpi.icon} />
         ))}
       </div>
@@ -68,10 +68,10 @@ export default function Home() {
       
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <RecentSales key={`sales-${selectedBusiness.id}`} />
+          <RecentSales key={selectedBusiness.id} />
         </div>
         <div className="lg:col-span-2">
-          <SmartReorder />
+          <SmartReorder key={selectedBusiness.id} />
         </div>
       </div>
     </div>

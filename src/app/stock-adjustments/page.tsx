@@ -7,10 +7,15 @@ import type { StockAdjustmentFormValues } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
 import AdjustmentsLog from '@/components/stock-adjustments/adjustments-log';
 import AdjustmentFormDialog from '@/components/stock-adjustments/adjustment-form-dialog';
+import { useBusiness } from '@/context/business-context';
 
 export default function StockAdjustmentsPage() {
-  const { products, stockAdjustments, adjustStock } = useInventory();
+  const { selectedBusiness } = useBusiness();
+  const { getProducts, getStockAdjustments, adjustStock } = useInventory();
   
+  const products = getProducts(selectedBusiness.id);
+  const stockAdjustments = getStockAdjustments(selectedBusiness.id);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleOpenAddDialog = () => {
@@ -18,7 +23,7 @@ export default function StockAdjustmentsPage() {
   };
 
   const handleSaveAdjustment = (data: StockAdjustmentFormValues) => {
-    adjustStock(data);
+    adjustStock(selectedBusiness.id, data);
     setIsFormOpen(false);
   };
   
@@ -36,6 +41,7 @@ export default function StockAdjustmentsPage() {
       </div>
       <div className="flex-1 overflow-hidden">
         <AdjustmentsLog
+          key={selectedBusiness.id}
           adjustments={stockAdjustments}
           products={products}
         />

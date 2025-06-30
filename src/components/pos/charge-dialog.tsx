@@ -23,11 +23,11 @@ interface ChargeDialogProps {
   cart: CartItem[];
   customer: Customer | null;
   discount: Discount | null;
-  onSaleComplete: (sale: Sale) => void;
+  onSaleComplete: (saleData: Omit<Sale, 'id' | 'employee'>) => void;
 }
 
 type PaymentStep = 'payment' | 'complete';
-type PaymentMethod = 'Cash' | 'Card';
+type PaymentMethod = 'Card' | 'Cash';
 
 export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, discount, onSaleComplete }: ChargeDialogProps) {
   const { toast } = useToast();
@@ -98,11 +98,9 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, dis
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Construct the sale object
-    const newSale: Sale = {
-        id: `SALE-${Date.now()}`,
+    const newSaleData: Omit<Sale, 'id' | 'employee'> = {
         timestamp: new Date().toISOString(),
         customer: customer ? `${customer.firstName} ${customer.lastName}` : 'Guest',
-        employee: 'Admin User', // Hardcoded for now
         subtotal: subtotal,
         discount: discountAmount,
         tax: taxAmount,
@@ -118,7 +116,7 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, dis
         }))
     };
 
-    onSaleComplete(newSale);
+    onSaleComplete(newSaleData);
     setIsProcessing(false);
     setStep('complete');
   };

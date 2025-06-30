@@ -15,7 +15,6 @@ import { MoreHorizontal, Search, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { format, startOfDay, endOfDay } from 'date-fns';
-import { sales } from "@/lib/mock-data";
 import type { Sale } from "@/lib/types";
 import SaleDetailsDialog from "./sale-details-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -23,8 +22,14 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { DatePickerWithRange } from "../ui/date-picker";
 import type { DateRange } from "react-day-picker";
+import { useBusiness } from "@/context/business-context";
+import { useInventory } from "@/context/inventory-context";
 
 export default function SalesLog() {
+  const { selectedBusiness } = useBusiness();
+  const { getSales } = useInventory();
+  const sales = getSales(selectedBusiness.id);
+
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const { toast } = useToast();
 
@@ -74,7 +79,7 @@ export default function SalesLog() {
 
       return searchMatch && statusMatch && dateMatch;
     });
-  }, [searchTerm, statusFilter, dateRange]);
+  }, [sales, searchTerm, statusFilter, dateRange]);
 
   const hasActiveFilters = searchTerm !== "" || statusFilter !== "all" || dateRange !== undefined;
 

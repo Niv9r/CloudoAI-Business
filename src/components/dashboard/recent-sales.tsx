@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Avatar,
   AvatarFallback,
@@ -10,21 +12,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-const salesData = [
-  { name: 'Olivia Martin', email: 'olivia.martin@email.com', amount: '+$1,999.00', avatarSrc: 'https://placehold.co/100x100.png', fallback: 'OM' },
-  { name: 'Jackson Lee', email: 'jackson.lee@email.com', amount: '+$39.00', avatarSrc: 'https://placehold.co/100x100.png', fallback: 'JL' },
-  { name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', amount: '+$299.00', avatarSrc: 'https://placehold.co/100x100.png', fallback: 'IN' },
-  { name: 'William Kim', email: 'will@email.com', amount: '+$99.00', avatarSrc: 'https://placehold.co/100x100.png', fallback: 'WK' },
-  { name: 'Sofia Davis', email: 'sofia.davis@email.com', amount: '+$39.00', avatarSrc: 'https://placehold.co/100x100.png', fallback: 'SD' },
-]
+import { useBusiness } from "@/context/business-context";
+import { useInventory } from "@/context/inventory-context";
+import { useMemo } from "react";
 
 export default function RecentSales() {
+  const { selectedBusiness } = useBusiness();
+  const { getSales } = useInventory();
+  
+  const salesData = useMemo(() => {
+    const sales = getSales(selectedBusiness.id);
+    return sales.slice(0, 5).map(sale => ({
+      name: sale.customer,
+      email: `${sale.customer.split(' ').join('.').toLowerCase()}@email.com`,
+      amount: `+$${sale.total.toFixed(2)}`,
+      avatarSrc: 'https://placehold.co/100x100.png',
+      fallback: sale.customer.split(' ').map(n => n[0]).join('')
+    }));
+  }, [selectedBusiness.id, getSales]);
+
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle className="font-headline">Recent Sales</CardTitle>
-        <CardDescription>You made 265 sales this month.</CardDescription>
+        <CardDescription>
+          You made {getSales(selectedBusiness.id).length} sales this month.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-8">

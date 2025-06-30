@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, endOfYear, format, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfYear, format } from 'date-fns';
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SalesSummaryReport from '@/components/reports/sales-summary-report';
@@ -17,8 +17,9 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 import { useInventory } from '@/context/inventory-context';
-import { sales as allSales, expenses as allExpenses, vendors } from '@/lib/mock-data';
-import type { SaleLineItem, Product } from '@/lib/types';
+import type { Product } from '@/lib/types';
+import { useBusiness } from '@/context/business-context';
+import { startOfDay as startOfDayFns, endOfDay as endOfDayFns } from 'date-fns';
 
 
 export default function ReportsPage() {
@@ -30,7 +31,13 @@ export default function ReportsPage() {
     const [activeTab, setActiveTab] = useState('sales');
     const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
-    const { products } = useInventory();
+    const { selectedBusiness } = useBusiness();
+    const { getProducts, getSales, getExpenses, getVendors } = useInventory();
+
+    const products = getProducts(selectedBusiness.id);
+    const allSales = getSales(selectedBusiness.id);
+    const allExpenses = getExpenses(selectedBusiness.id);
+    const vendors = getVendors(selectedBusiness.id);
 
     const handleGeneratePdf = () => {
         if (!date?.from || !date?.to) {
@@ -50,14 +57,15 @@ export default function ReportsPage() {
         doc.setFontSize(22);
         doc.text("Business Analytics Report", 15, 20);
         doc.setFontSize(12);
-        doc.text(`Period: ${dateString}`, 15, 28);
+        doc.text(`For: ${selectedBusiness.name}`, 15, 28)
+        doc.text(`Period: ${dateString}`, 15, 36);
         doc.setFontSize(10);
-        doc.text(`Generated on: ${format(new Date(), "PPP p")}`, 15, 34);
+        doc.text(`Generated on: ${format(new Date(), "PPP p")}`, 15, 42);
 
         // --- Sales Summary ---
         const filteredSales = allSales.filter(sale => {
             const saleDate = new Date(sale.timestamp);
-            return (saleDate >= startOfDay(date.from as Date)) && (saleDate <= endOfDay(date.to as Date));
+            return (saleDate >= startOfDayFns(date.from as Date)) && (saleDate <= endOfDayFns(date.to as Date));
         });
 
         const grossSales = filteredSales.reduce((acc, sale) => acc + sale.subtotal, 0);
@@ -130,7 +138,7 @@ export default function ReportsPage() {
 
         doc.addPage();
         doc.setFontSize(16);
-        doc.text("Inventory Valuation", 15, 20);
+        doc.text("Inventory Valuation (as of today)", 15, 20);
         doc.autoTable({
             startY: 25,
             body: [
@@ -171,7 +179,7 @@ export default function ReportsPage() {
         // --- Expense Breakdown ---
         const filteredExpenses = allExpenses.filter(expense => {
             const expenseDate = new Date(expense.issueDate);
-            return (expenseDate >= startOfDay(date.from as Date)) && (expenseDate <= endOfDay(date.to as Date));
+            return (expenseDate >= startOfDayFns(date.from as Date)) && (expenseDate <= endOfDayFns(date.to as Date));
         });
         const totalSpent = filteredExpenses.reduce((acc, exp) => acc + exp.total, 0);
         const expensesByVendor = filteredExpenses.reduce((acc, exp) => {
@@ -202,7 +210,7 @@ export default function ReportsPage() {
 
         // --- Finalize and Save ---
         doc.deletePage(1); // Remove the initial blank page
-        doc.save(`Cloudo-Report-${dateString}.pdf`);
+        doc.save(`Cloudo-Report-${selectedBusiness.name.replace(/\s/g, '_')}-${dateString}.pdf`);
         setIsGenerating(false);
     };
 
@@ -256,18 +264,18 @@ export default function ReportsPage() {
                     <TabsTrigger value="expenses">Expense Reports</TabsTrigger>
                 </TabsList>
                  <TabsContent value="sales" className="space-y-8 mt-4">
-                    <SalesSummaryReport dateRange={date} />
+                    <SalesSummaryReport key={`${selectedBusiness.id}-sales-summary`} dateRange={date} />
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                        <TopSellingProductsReport dateRange={date} />
-                        <PaymentMethodsReport dateRange={date} />
+                        <TopSellingProductsReport key={`${selectedBusiness.id}-top-products`} dateRange={date} />
+                        <PaymentMethodsReport key={`${selectedBusiness.id}-payments`} dateRange={date} />
                     </div>
                 </TabsContent>
                 <TabsContent value="inventory" className="space-y-8 mt-4">
-                    <InventoryValuationReport />
-                    <InventoryStatusReport />
+                    <InventoryValuationReport key={`${selectedBusiness.id}-inv-valuation`} />
+                    <InventoryStatusReport key={`${selectedBusiness.id}-inv-status`} />
                 </TabsContent>
                 <TabsContent value="expenses" className="space-y-8 mt-4">
-                    <ExpenseBreakdownReport dateRange={date} />
+                    <ExpenseBreakdownReport key={`${selectedBusiness.id}-expenses`} dateRange={date} />
                 </TabsContent>
             </Tabs>
         </div>

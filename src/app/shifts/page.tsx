@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { shifts as mockShifts } from '@/lib/mock-data';
 import type { Shift } from '@/lib/types';
 import ShiftsLog from '@/components/shifts/shifts-log';
 import ShiftDetailsDialog from '@/components/shifts/shift-details-dialog';
+import { useInventory } from '@/context/inventory-context';
+import { useBusiness } from '@/context/business-context';
 
 export default function ShiftsPage() {
-  const [shifts] = useState<Shift[]>(mockShifts);
+  const { selectedBusiness } = useBusiness();
+  const { getShifts } = useInventory();
+  const shifts = getShifts(selectedBusiness.id);
+  
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
 
   const handleViewDetails = (shift: Shift) => {
@@ -28,6 +32,7 @@ export default function ShiftsPage() {
       </div>
       <div className="flex-1 overflow-hidden">
         <ShiftsLog
+          key={selectedBusiness.id}
           shifts={shifts}
           onViewDetails={handleViewDetails}
         />
