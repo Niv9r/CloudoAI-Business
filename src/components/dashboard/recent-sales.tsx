@@ -21,7 +21,7 @@ const salesData = [
 
 export default function RecentSales() {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="font-headline">Recent Sales</CardTitle>
         <CardDescription>You made 265 sales this month.</CardDescription>

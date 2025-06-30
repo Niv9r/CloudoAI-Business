@@ -4,3 +4,4 @@ config();
 // Define and register flows here.
 // For example:
 // import '@/ai/flows/example-flow.ts';
+import '@/ai/flows/suggest-reorder-flow.ts';
