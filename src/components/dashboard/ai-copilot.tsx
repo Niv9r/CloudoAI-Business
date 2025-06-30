@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useActionState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { handleBusinessCopilotQuery } from '@/ai/flows/business-copilot-flow';
 import { useInventory } from '@/context/inventory-context';
@@ -46,6 +47,7 @@ export default function AiCopilot() {
   const [state, formAction] = useActionState(handleBusinessCopilotQuery, initialState);
 
   const businessContext = JSON.stringify({
+    businessProfile: selectedBusiness,
     products: getProducts(selectedBusiness.id).slice(0, 10),
     sales: getSales(selectedBusiness.id).slice(0, 10),
     expenses: getExpenses(selectedBusiness.id).slice(0, 10),

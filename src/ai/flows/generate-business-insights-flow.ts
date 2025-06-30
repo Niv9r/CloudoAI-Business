@@ -10,7 +10,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateBusinessInsightsInputSchema = z.object({
-  businessContext: z.string().describe('A JSON string containing all relevant business data like products, sales, and expenses.'),
+  businessContext: z.string().describe('A JSON string containing all relevant business data like the business profile, products, sales, and expenses.'),
 });
 
 const BusinessInsightsOutputSchema = z.object({
@@ -36,7 +36,9 @@ const generateBusinessInsightsFlow = ai.defineFlow(
       output: { schema: BusinessInsightsOutputSchema },
       prompt: `You are an expert business analyst and consultant AI. Your task is to perform a comprehensive, holistic analysis of the provided business data and generate a report with actionable insights.
 
-The user has provided a JSON object containing their core business data: products, sales, vendors, and expenses.
+The user has provided a JSON object containing their core business data. You are performing this analysis for the business identified in the \`businessProfile\` object inside the JSON. Make sure your analysis and suggestions are tailored to this specific business.
+
+The data includes: the business profile, products, sales, vendors, and expenses.
 
 Carefully analyze all the data to generate insights for each of the following categories. For each category, provide a concise summary followed by key bullet points. The entire response for each category MUST be in markdown format.
 

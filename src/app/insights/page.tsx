@@ -45,6 +45,7 @@ export default function InsightsPage() {
   const vendors = getVendors(selectedBusiness.id);
 
   const businessContext = JSON.stringify({
+    businessProfile: selectedBusiness,
     products: products,
     sales: sales,
     expenses: expenses,

@@ -12,7 +12,7 @@ import type { Product, Sale, Expense } from '@/lib/types';
 
 const BusinessCopilotInputSchema = z.object({
   query: z.string().describe('The user\'s natural language question about their business.'),
-  businessContext: z.string().describe('A JSON string containing relevant business data like products, sales, and expenses.'),
+  businessContext: z.string().describe('A JSON string containing relevant business data like the business profile, products, sales, and expenses.'),
 });
 
 const BusinessCopilotOutputSchema = z.object({
@@ -39,7 +39,9 @@ const businessCopilotFlow = ai.defineFlow(
         output: { schema: BusinessCopilotOutputSchema },
         prompt: `You are 'CLOUDO Co-Pilot', an expert business analyst AI. Your goal is to provide concise, data-driven insights based on the user's question and the provided business data.
 
-Analyze the user's question and the provided JSON data context to generate a helpful and accurate response. The data context includes products, sales, and expenses. The sales data includes an 'employee' field, allowing you to answer questions about sales performance per employee. Format your response in markdown for readability.
+You are analyzing data for the business named in the \`businessProfile\` object within the JSON context. When responding, refer to the business by its name to personalize the experience.
+
+Analyze the user's question and the provided JSON data context to generate a helpful and accurate response. The data context includes the business profile, products, sales, and expenses. The sales data includes an 'employee' field, allowing you to answer questions about sales performance per employee. Format your response in markdown for readability.
 
 If the user's query suggests a clear next step or action that can be performed within the app, identify the most relevant page from this list and include it in the 'suggestedActionLink' field.
 Available pages:
