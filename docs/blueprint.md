@@ -1,0 +1,105 @@
+# **App Name**: CLOUDO Professional
+
+## Core Features:
+
+- Tenant Isolation: Multi-tenant platform support with each business having isolated data, ensuring data privacy and security.
+- Real-time KPIs: Unified, real-time dashboards to monitor KPIs across businesses, providing immediate insights into performance.
+- Event-Driven Actions: Event-driven architecture using Cloud Functions for critical actions such as sales and inventory adjustments, automating key processes.
+- Role-Based Permissions: Granular, role-based access control configured through Firebase Authentication and Firestore Security Rules, enhancing security and compliance.
+- Real-time Stock Alerts: Real-time stock level display with warnings for low or out-of-stock items, preventing stockouts and improving inventory management.
+- Smart Reordering: Automated reorder suggestions based on sales velocity and reorder points to maintain optimal stock levels. This system may incorporate a tool to suggest which algorithm is appropriate for the velocity calculation.
+- Custom Reporting: Comprehensive reporting suite to create custom reports by selecting fields, filters, and aggregations, offering flexible data analysis.
+- Onboarding & Setup Wizards: Multi-step guided setup for new businesses, including initial inventory import (CSV/Excel via Firebase Storage + Cloud Function parsing), tax configuration, and payment gateway setup.
+- Business Profile: Advanced settings for regional compliance, fiscal year definition, multi-currency support (if applicable), custom fields for operational data.
+- User & Team Management - Invite System: Invite system with expiring tokens.
+- User & Team Management - Permission Profiles UI: Intuitive UI for assigning granular permissionProfiles to users.
+- User & Team Management - Employee Clock-in/out: Employee clock-in/out via POS or dedicated terminal.
+- User & Team Management - Payroll Integration: Payroll integration points (APIs for exporting employee hours/sales data).
+- Robust Interface: Optimized for various devices (tablet, desktop, mobile), offline capabilities with data synchronization (Firestore local persistence). Customizable layouts.
+- Product Catalog & Search - Fast Search: Blazing fast search by name, SKU, barcode, category.
+- Product Catalog & Search - Variants & Composite Products: Support for product variants and composite products.
+- Product Catalog & Search - Hot Keys: Quick Favorite or Hot Key buttons for frequently sold items.
+- Product Catalog & Search - Real-time Stock Levels: Real-time stock level display (warnings for low/out-of-stock).
+- Product Catalog & Search - Price Overrides: Price overrides with permission.
+- Cart & Order Management - Hold/Retrieve Orders: Hold/Retrieve orders.
+- Cart & Order Management - Split Tender: Split tender, multiple payment methods per transaction.
+- Cart & Order Management - Complex Discounts: Apply complex discounts (item-level, cart-level, coupon codes, automatic promotions from discounts collection).
+- Cart & Order Management - Customer Association: Add customer to transaction (search customers collection).
+- Cart & Order Management - Notes: Line item notes, order notes.
+- Cart & Order Management - Customer Display: Customer display integration (secondary screen showing cart).
+- Comprehensive Payment Integrations: Comprehensive Payment Integrations: Stripe, Square, PayPal, custom gateways. Payment processing via secure client SDKs, validated by Cloud Functions.
+- Gift Cards: Gift Cards: Issuing, redeeming, topping up.
+- Loyalty Points: Loyalty Points: Accumulation and redemption, integrated with customers.
+- Cash Management: Detailed cash drawer tracking (pay-ins, pay-outs, till reconciliation).
+- Receipt Generation & Management - Customizable Templates: Highly customizable receipt templates (branding, terms, QR codes for loyalty/feedback).
+- Receipt Generation & Management - Delivery Options: Print (thermal, A4), Email, SMS options.
+- Receipt Generation & Management - Digital Archive: Digital receipt archive in Firebase Storage.
+- Receipt Generation & Management - Signature Capture: Customer signature capture for card payments.
+- Shift & Cash Drawer Management - Mandatory Shifts: Mandatory shift start/end with cash float declaration and reconciliation.
+- Shift & Cash Drawer Management - Shift Audit Trail: Detailed shifts collection for audit.
+- Shift & Cash Drawer Management - Cash Drops: Mid-shift cash drops (cashMovements subcollection).
+- Shift & Cash Drawer Management - Reports: Z-Reports & X-Reports (live shift summary) with reconciliation against expected totals.
+- Shift & Cash Drawer Management - Discrepancy Logging: Discrepancy logging and reporting.
+- Returns & Refunds - Processing: Process full or partial returns by scanning original receipt or searching sales log.
+- Returns & Refunds - Return Methods: Return to original payment method or store credit/gift card.
+- Returns & Refunds - Automation: Automatic inventory adjustment and financial reporting.
+- Void Transactions: Ability to void transactions (before shift close or with management approval) with audit trail.
+- Master Dashboard - Real-time KPIs: Configurable widgets for Gross Revenue, Net Profit, COGS, Gross Margin, Average Transaction Value, Sales Count, Customer Count, top-selling products, inventory valuation, cash flow.
+- Master Dashboard - Advanced Filtering: Granular date ranges, comparison periods, location filters, employee filters.
+- Master Dashboard - Customizable Views: Owners can arrange and save dashboard layouts.
+- Master Dashboard - Alerts & Notifications: Low stock, high sales volume, unusual activity, overdue expenses (via FCM, email).
+- Product & Inventory Management (Advanced) - Product Lifecycle: Create, edit, duplicate, archive products/variants.
+- Product & Inventory Management (Advanced) - Multi-location Inventory: Track stock by locationId.
+- Product & Inventory Management (Advanced) - Stock Takes: Full or partial stock count workflows, discrepancy reporting, automated adjustments with audit trail (inventoryMovements).
+- Product & Inventory Management (Advanced) - Transfers: Inventory transfers between locations.
+- Product & Inventory Management (Advanced) - Bundles/Kits/Assemblies: Manage composite products, auto-deduct components on sale.
+- Product & Inventory Management (Advanced) - Reorder Management: Automated reorder suggestions based on sales velocity and reorder points.
+- Product & Inventory Management (Advanced) - Supplier Management: CRUD for vendors. Link products to preferred suppliers.
+- Product & Inventory Management (Advanced) - Pricing Management: Global price changes, price tiers, promotional pricing, sales campaigns.
+- Sales & Order Management (Comprehensive) - Sales Log: Searchable, filterable, sortable sales log.
+- Sales & Order Management (Comprehensive) - Transaction View: Detailed transaction view with all payment, discount, and product details.
+- Sales & Order Management (Comprehensive) - Layaways/Partial Payments: Manage orders paid in installments.
+- Sales & Order Management (Comprehensive) - Order Fulfillment: Track status from creation to completion.
+- Sales & Order Management (Comprehensive) - Audit Trail: Audit trail for all modifications (voids, refunds, edits).
+- Expense Management (Full Accounts Payable Functionality) - Workflow: Expense creation, approval workflow, payment tracking.
+- Expense Management (Full Accounts Payable Functionality) - Invoice Processing: Manual entry, OCR integration (Google Cloud Vision API via Cloud Functions) for automated data extraction. Support for multi-page invoices.
+- Expense Management (Full Accounts Payable Functionality) - Categorization: Hierarchical expense categories mapped to General Ledger accounts.
+- Expense Management (Full Accounts Payable Functionality) - Recurring Expenses: Setup for automated recurring expense entries.
+- Expense Management (Full Accounts Payable Functionality) - Reporting: Aged Payables, Expense by Category/Vendor, Bill Due Dates.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Customer Segmentation: Tags, custom fields, purchase history.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Custom Pricing: Assign priceTiers to customers or specific product pricing.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Order Workflow: Draft, Quote, Pending, Confirmed, Packed, Shipped, Invoiced, Paid, Fulfilled.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Deposits & Payment Schedules: Manage partial payments and remaining balances.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Automated Notifications: Order status updates to customers (via Cloud Functions).
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Packing Slips & Shipping Labels: Generation and printing.
+- Wholesale & B2B Customer Module (Advanced CRM & Order Management) - Sales Rep Tracking: Associate orders with specific sales representatives.
+- Reporting Suite (Business Intelligence Level) - Dynamic Report Builder: Allow owners to create custom reports by selecting fields, filters, and aggregations.
+- Reporting Suite (Business Intelligence Level) - Profit & Loss (P&L) Statement: Accrual & Cash basis. Drill-down to transactions.
+- Reporting Suite (Business Intelligence Level) - Balance Sheet: Assets, Liabilities, Equity.
+- Reporting Suite (Business Intelligence Level) - Cash Flow Statement: Operating, Investing, Financing activities.
+- Reporting Suite (Business Intelligence Level) - Trial Balance: All standard financial reports
+- Reporting Suite (Business Intelligence Level) - General Ledger: All standard financial reports
+- Reporting Suite (Business Intelligence Level) - Sales Reports: By product, category, employee, payment method, hour, day, customer type, location. Top/Bottom performers.
+- Reporting Suite (Business Intelligence Level) - Inventory Reports: Inventory Valuation (FIFO/LIFO/Weighted Average), Stock on Hand, Stock Movement History, Low Stock, Dead Stock.
+- Reporting Suite (Business Intelligence Level) - Expense Reports: By category, vendor, payment status.
+- Reporting Suite (Business Intelligence Level) - Sales Tax Report: Detailed breakdown for tax filing, showing collected and paid taxes.
+- Reporting Suite (Business Intelligence Level) - Employee Performance: Sales per employee, average transaction value per employee.
+- Reporting Suite (Business Intelligence Level) - Customer Reports: New customers, returning customers, average spend, customer lifetime value.
+- Reporting Suite (Business Intelligence Level) - Audit Logs: Detailed logs of all sensitive system actions (user logins, stock adjustments, price changes, refunds) with timestamp and user.
+- Reporting Suite (Business Intelligence Level) - Export Options: CSV, XLSX, PDF (formatted for print).
+- Reporting Suite (Business Intelligence Level) - Scheduled Reports: Send reports automatically via email daily/weekly/monthly.
+- Accounting & General Ledger Integration (Core Financials) - Chart of Accounts: User-definable chart of accounts for mapping revenue, COGS, expense, asset, liability, and equity accounts.
+- Accounting & General Ledger Integration (Core Financials) - Journal Entries: Automated journal entries for sales, purchases, payments, and manual adjustments.
+- Accounting & General Ledger Integration (Core Financials) - Bank Reconciliation: Import bank statements (CSV/OFX) and match transactions to CLOUDO entries.
+- Accounting & General Ledger Integration (Core Financials) - Payroll Module (Basic): Track employee hours, calculate basic wages. Integration point for dedicated payroll services.
+- Accounting & General Ledger Integration (Core Financials) - Fixed Assets: Tracking of business assets, depreciation schedules.
+
+## Style Guidelines:
+
+- Primary color: Deep blue (#3F51B5) for a sense of trust and stability.
+- Background color: Light blue-gray (#E8EAF6) to provide a calm backdrop.
+- Accent color: Purple (#7E57C2) to highlight key actions and navigation.
+- Body font: 'PT Sans', a humanist sans-serif for body text. Headline Font: 'Playfair', a modern sans-serif for headlines.
+- Consistent and professional icons across all modules to aid navigation and understanding.
+- Responsive layout optimized for various devices including tablets, desktops, and mobile. Consistent grid-based structure.
+- Subtle transitions and animations for interactive elements, enhancing user engagement without being intrusive.
