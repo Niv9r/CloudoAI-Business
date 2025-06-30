@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { handleSuggestReorderAlgorithm, type FormState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Terminal } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useActionState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const initialState: FormState = {
@@ -28,7 +28,7 @@ function SubmitButton() {
 }
 
 export default function SmartReorder() {
-  const [state, formAction] = useFormState(handleSuggestReorderAlgorithm, initialState);
+  const [state, formAction] = useActionState(handleSuggestReorderAlgorithm, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
