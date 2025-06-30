@@ -46,3 +46,25 @@ export type HeldOrder = {
   discount: Discount | null;
   total: number;
 };
+
+export type SaleLineItem = {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
+export type Sale = {
+  id: string;
+  timestamp: string;
+  customer: string;
+  employee: string;
+  total: number;
+  status: "Completed" | "Refunded" | "Partially Refunded";
+  payment: "Card" | "Cash" | "Split";
+  lineItems: SaleLineItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+};

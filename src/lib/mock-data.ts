@@ -1,4 +1,4 @@
-import type { Product, Customer } from './types';
+import type { Product, Customer, Sale } from './types';
 
 export const products: Product[] = [
   {
@@ -142,4 +142,86 @@ export const customers: Customer[] = [
         email: "eva@greengoods.co",
         phone: "555-0105",
     },
+];
+
+
+export const sales: Sale[] = [
+  {
+    id: "SALE-00123",
+    timestamp: "2024-05-28T10:00:00Z",
+    customer: "Olivia Martin",
+    employee: "Admin User",
+    subtotal: 1749.85,
+    tax: 174.99,
+    discount: 0,
+    total: 1924.84,
+    status: "Completed",
+    payment: "Card",
+    lineItems: [
+      { productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, subtotal: 1499.90 },
+      { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, subtotal: 249.95 },
+    ],
+  },
+  {
+    id: "SALE-00122",
+    timestamp: "2024-05-27T14:30:00Z",
+    customer: "Jackson Lee",
+    employee: "Admin User",
+    subtotal: 37.49,
+    tax: 3.75,
+    discount: 0,
+    total: 41.24,
+    status: "Completed",
+    payment: "Cash",
+    lineItems: [
+        { productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, subtotal: 24.99 },
+        { productId: "PROD008", name: "Organic Green Tea", quantity: 1, unitPrice: 12.50, subtotal: 12.50 },
+    ],
+  },
+  {
+    id: "SALE-00121",
+    timestamp: "2024-05-27T11:15:00Z",
+    customer: "Isabella Nguyen",
+    employee: "Admin User",
+    subtotal: 269.97,
+    tax: 27.00,
+    discount: 0,
+    total: 296.97,
+    status: "Refunded",
+    payment: "Card",
+    lineItems: [
+        { productId: "PROD010", name: "Wireless Bluetooth Speaker", quantity: 3, unitPrice: 89.99, subtotal: 269.97 }
+    ],
+  },
+  {
+    id: "SALE-00120",
+    timestamp: "2024-05-26T18:45:00Z",
+    customer: "William Kim",
+    employee: "Admin User",
+    subtotal: 99.98,
+    tax: 10.00,
+    discount: 0,
+    total: 109.98,
+    status: "Completed",
+    payment: "Card",
+    lineItems: [
+        { productId: "PROD009", name: "Modern Desk Lamp", quantity: 1, unitPrice: 79.99, subtotal: 79.99 },
+        { productId: "PROD007", name: "Handcrafted Ceramic Mug", quantity: 1, unitPrice: 19.99, subtotal: 19.99 },
+    ],
+  },
+  {
+    id: "SALE-00119",
+    timestamp: "2024-05-26T09:05:00Z",
+    customer: "Sofia Davis",
+    employee: "Admin User",
+    subtotal: 31.98,
+    tax: 3.20,
+    discount: 0,
+    total: 35.18,
+    status: "Partially Refunded",
+    payment: "Split",
+    lineItems: [
+        { productId: "PROD001", name: "Artisan Coffee Beans", quantity: 2, unitPrice: 15.99, subtotal: 31.98 }
+    ],
+  },
 ];
