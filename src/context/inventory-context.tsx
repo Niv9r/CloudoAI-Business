@@ -1,20 +1,22 @@
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
-import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor } from '@/lib/types';
-import { products as mockProducts, purchaseOrders as mockPurchaseOrders, vendors as mockVendors } from '@/lib/mock-data';
+import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, StockAdjustment, StockAdjustmentFormValues } from '@/lib/types';
+import { products as mockProducts, purchaseOrders as mockPurchaseOrders, vendors as mockVendors, stockAdjustments as mockStockAdjustments } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 interface InventoryContextType {
   products: Product[];
   purchaseOrders: PurchaseOrder[];
   vendors: Vendor[];
+  stockAdjustments: StockAdjustment[];
   addProduct: (data: ProductFormValues) => void;
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   addPurchaseOrder: (data: PurchaseOrderFormValues) => void;
   updatePurchaseOrder: (po: PurchaseOrder) => void;
   receiveStock: (poId: string, receivedItems: { productId: string; quantityReceived: number }[]) => void;
+  adjustStock: (data: StockAdjustmentFormValues) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -23,10 +25,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
+  const [stockAdjustments, setStockAdjustments] = useState<StockAdjustment[]>(mockStockAdjustments);
   const [vendors] = useState<Vendor[]>(mockVendors);
 
   const getStatusFromStock = (stock: number): Product['status'] => {
-    if (stock === 0) return "Out of Stock";
+    if (stock <= 0) return "Out of Stock";
     if (stock > 0 && stock <= 25) return "Low Stock";
     return "In Stock";
   }
@@ -67,7 +70,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         expectedDate: data.expectedDate.toISOString(),
         lineItems: data.lineItems.map(li => ({...li, quantityReceived: 0 })),
         total,
-        status: 'Draft',
+        status: 'Ordered',
     };
     setPurchaseOrders(prev => [newPO, ...prev]);
     toast({ title: "Success", description: "Purchase Order created." });
@@ -119,18 +122,49 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
   }, [toast]);
 
+  const adjustStock = useCallback((data: StockAdjustmentFormValues) => {
+    const productToUpdate = products.find(p => p.id === data.productId);
+    if (!productToUpdate) {
+        toast({ variant: "destructive", title: "Error", description: "Product not found." });
+        return;
+    };
+
+    const newStock = productToUpdate.stock + data.quantity;
+
+    const newAdjustment: StockAdjustment = {
+        id: `ADJ-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        employee: 'Admin User', // Hardcoded for now
+        ...data
+    };
+    setStockAdjustments(prev => [newAdjustment, ...prev]);
+
+    setProducts(prevProducts => prevProducts.map(p => p.id === data.productId ? {
+        ...p,
+        stock: newStock,
+        status: getStatusFromStock(newStock)
+    } : p));
+
+    toast({
+        title: "Stock Adjusted",
+        description: `Stock for ${productToUpdate.name} changed by ${data.quantity}. New total: ${newStock}.`
+    });
+  }, [products, toast]);
+
 
   const value = useMemo(() => ({
     products,
     purchaseOrders,
     vendors,
+    stockAdjustments,
     addProduct,
     updateProduct,
     deleteProduct,
     addPurchaseOrder,
     updatePurchaseOrder,
     receiveStock,
-  }), [products, purchaseOrders, vendors, addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, receiveStock]);
+    adjustStock,
+  }), [products, purchaseOrders, vendors, stockAdjustments, addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, receiveStock, adjustStock]);
 
   return (
     <InventoryContext.Provider value={value}>

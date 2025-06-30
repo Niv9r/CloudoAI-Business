@@ -162,3 +162,27 @@ export type PurchaseOrder = {
     status: 'Draft' | 'Ordered' | 'Partially Received' | 'Received' | 'Cancelled';
     notes?: string;
 };
+
+export const stockAdjustmentTypes = ['Stock Count', 'Damage', 'Theft', 'Return', 'Promotion', 'Other'] as const;
+const stockAdjustmentTypeEnum = z.enum(stockAdjustmentTypes);
+export type StockAdjustmentType = z.infer<typeof stockAdjustmentTypeEnum>;
+
+
+export const stockAdjustmentFormSchema = z.object({
+  productId: z.string().min(1, 'Please select a product.'),
+  type: stockAdjustmentTypeEnum,
+  quantity: z.coerce.number().int('Quantity must be a whole number.').refine(val => val !== 0, 'Quantity cannot be zero.'),
+  notes: z.string().min(3, 'A reason/note for the adjustment is required.'),
+});
+
+export type StockAdjustmentFormValues = z.infer<typeof stockAdjustmentFormSchema>;
+
+export type StockAdjustment = {
+    id: string;
+    productId: string;
+    timestamp: string; // ISO String
+    type: StockAdjustmentType;
+    quantity: number; // can be positive or negative
+    notes: string;
+    employee: string; // User who made the adjustment
+};

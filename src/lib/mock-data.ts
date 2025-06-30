@@ -1,4 +1,4 @@
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment } from './types';
 
 export const products: Product[] = [
   {
@@ -336,5 +336,26 @@ export const purchaseOrders: PurchaseOrder[] = [
         total: 1500.00,
         status: 'Draft',
         notes: 'Awaiting final approval from management.'
+    }
+];
+
+export const stockAdjustments: StockAdjustment[] = [
+    {
+        id: 'ADJ-001',
+        productId: 'PROD004',
+        timestamp: '2024-05-29T09:00:00.000Z',
+        type: 'Damage',
+        quantity: -2,
+        notes: 'Items found damaged in storage.',
+        employee: 'Admin User'
+    },
+    {
+        id: 'ADJ-002',
+        productId: 'PROD003',
+        timestamp: '2024-05-28T14:00:00.000Z',
+        type: 'Stock Count',
+        quantity: 5,
+        notes: 'Found extra units during weekly stock count.',
+        employee: 'Admin User'
     }
 ];
