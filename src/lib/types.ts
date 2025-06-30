@@ -30,16 +30,16 @@ export type CartItem = Product & {
     quantity: number;
 };
 
-export const customerSchema = z.object({
+export const customerFormSchema = z.object({
     type: z.enum(['individual', 'company']),
     firstName: z.string().min(1, 'First name is required.'),
     lastName: z.string().min(1, 'Last name is required.'),
     companyName: z.string().optional().nullable(),
     email: z.string().email('Invalid email address.'),
     phone: z.string().min(1, 'Phone number is required.'),
-    loyaltyPoints: z.number().int().optional(),
+    loyaltyPoints: z.coerce.number().int().optional(),
 });
-export type CustomerFormValues = z.infer<typeof customerSchema>;
+export type CustomerFormValues = z.infer<typeof customerFormSchema>;
 
 export type Customer = CustomerFormValues & {
     id:string;

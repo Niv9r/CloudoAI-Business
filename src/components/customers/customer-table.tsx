@@ -13,9 +13,15 @@ import {
   import { MoreHorizontal } from "lucide-react";
   import { Button } from "../ui/button";
   import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "../ui/dropdown-menu";
-  import { customers } from "@/lib/mock-data";
+  import type { Customer } from "@/lib/types";
+
+  interface CustomerTableProps {
+    customers: Customer[];
+    onEdit: (customer: Customer) => void;
+    onDelete: (customer: Customer) => void;
+  }
   
-  export default function CustomerTable() {
+  export default function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
     return (
       <Card className="h-full w-full flex flex-col">
         <CardHeader>
@@ -60,9 +66,9 @@ import {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(customer)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View History</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDelete(customer)} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { customers } from '@/lib/mock-data';
+import { useCustomer } from '@/context/customer-context';
 import type { Customer } from '@/lib/types';
 import {
   Dialog,
@@ -27,6 +27,7 @@ export default function CustomerSearchDialog({
   onOpenChange,
   onSelectCustomer,
 }: CustomerSearchDialogProps) {
+  const { customers } = useCustomer();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredCustomers = customers.filter(
@@ -40,6 +41,10 @@ export default function CustomerSearchDialog({
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
   }
+
+  // TODO: Implement "Add New Customer" functionality
+  // This could open the CustomerFormDialog or navigate to the customers page.
+  // For now, it will just be a button.
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

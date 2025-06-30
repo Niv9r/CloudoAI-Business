@@ -7,6 +7,7 @@ import AppSidebar from '@/components/layout/app-sidebar';
 import AppHeader from '@/components/layout/app-header';
 import { BusinessProvider } from '@/context/business-context';
 import { InventoryProvider } from '@/context/inventory-context';
+import { CustomerProvider } from '@/context/customer-context';
 
 export const metadata: Metadata = {
   title: 'CLOUDO Professional',
@@ -28,17 +29,19 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <BusinessProvider>
           <InventoryProvider>
-            <SidebarProvider>
-              <div className="relative flex min-h-screen w-full">
-                <AppSidebar />
-                <div className="flex flex-1 flex-col overflow-hidden">
-                  <AppHeader />
-                  <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                    {children}
-                  </main>
+            <CustomerProvider>
+              <SidebarProvider>
+                <div className="relative flex min-h-screen w-full">
+                  <AppSidebar />
+                  <div className="flex flex-1 flex-col overflow-hidden">
+                    <AppHeader />
+                    <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                      {children}
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </SidebarProvider>
+              </SidebarProvider>
+            </CustomerProvider>
           </InventoryProvider>
         </BusinessProvider>
         <Toaster />
