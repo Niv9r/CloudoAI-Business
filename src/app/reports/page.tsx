@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from 'date-fns';
+import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfYear, format, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SalesSummaryReport from '@/components/reports/sales-summary-report';
@@ -14,9 +14,11 @@ import InventoryStatusReport from '@/components/reports/inventory-status-report'
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { cn } from '@/lib/utils';
+import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
+import { useInventory } from '@/context/inventory-context';
+import { sales as allSales, expenses as allExpenses, vendors } from '@/lib/mock-data';
+import type { SaleLineItem, Product } from '@/lib/types';
 
 
 export default function ReportsPage() {
@@ -28,15 +30,9 @@ export default function ReportsPage() {
     const [activeTab, setActiveTab] = useState('sales');
     const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
+    const { products } = useInventory();
 
-    const salesSummaryRef = useRef<HTMLDivElement>(null);
-    const topSellingRef = useRef<HTMLDivElement>(null);
-    const paymentMethodsRef = useRef<HTMLDivElement>(null);
-    const inventoryValuationRef = useRef<HTMLDivElement>(null);
-    const inventoryStatusRef = useRef<HTMLDivElement>(null);
-    const expenseBreakdownRef = useRef<HTMLDivElement>(null);
-
-    const handleGeneratePdf = async () => {
+    const handleGeneratePdf = () => {
         if (!date?.from || !date?.to) {
             toast({
                 variant: 'destructive',
@@ -45,53 +41,168 @@ export default function ReportsPage() {
             });
             return;
         }
-
         setIsGenerating(true);
-        
+
         const doc = new jsPDF('p', 'mm', 'a4');
-        const margin = 15;
-        let yPos = 20;
-
-        doc.setFontSize(22);
-        doc.text("Business Analytics Report", margin, yPos);
-        yPos += 10;
-        doc.setFontSize(12);
         const dateString = `${format(date.from, "PPP")} - ${format(date.to, "PPP")}`;
-        doc.text(`Period: ${dateString}`, margin, yPos);
+
+        // --- Report Header ---
+        doc.setFontSize(22);
+        doc.text("Business Analytics Report", 15, 20);
+        doc.setFontSize(12);
+        doc.text(`Period: ${dateString}`, 15, 28);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${format(new Date(), "PPP p")}`, 15, 34);
+
+        // --- Sales Summary ---
+        const filteredSales = allSales.filter(sale => {
+            const saleDate = new Date(sale.timestamp);
+            return (saleDate >= startOfDay(date.from as Date)) && (saleDate <= endOfDay(date.to as Date));
+        });
+
+        const grossSales = filteredSales.reduce((acc, sale) => acc + sale.subtotal, 0);
+        const totalDiscounts = filteredSales.reduce((acc, sale) => acc + sale.discount, 0);
+        const netSales = grossSales - totalDiscounts;
+        const totalOrders = filteredSales.length;
+        const averageOrderValue = totalOrders > 0 ? netSales / totalOrders : 0;
         
-        const reportElements = [
-            { ref: salesSummaryRef, title: "Sales Summary" },
-            { ref: topSellingRef, title: "Top Selling Products" },
-            { ref: paymentMethodsRef, title: "Sales by Payment Method" },
-            { ref: inventoryValuationRef, title: "Inventory Valuation" },
-            { ref: inventoryStatusRef, title: "Inventory Status" },
-            { ref: expenseBreakdownRef, title: "Expense Breakdown" },
-        ];
-        
-        for (let i = 0; i < reportElements.length; i++) {
-            const { ref, title } = reportElements[i];
-            if (ref.current) {
-                const canvas = await html2canvas(ref.current, { scale: 2, useCORS: true });
-                const imgData = canvas.toDataURL('image/png');
-                const imgProps = doc.getImageProperties(imgData);
-                const pdfWidth = doc.internal.pageSize.getWidth() - 2 * margin;
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                
-                doc.addPage();
-                yPos = margin;
-                
-                doc.setFontSize(16);
-                doc.text(title, margin, yPos);
-                yPos += 10;
-                doc.addImage(imgData, 'PNG', margin, yPos, pdfWidth, pdfHeight);
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Sales Summary", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            body: [
+                ['Gross Sales', `$${grossSales.toFixed(2)}`],
+                ['Net Sales', `$${netSales.toFixed(2)}`],
+                ['Total Orders', `${totalOrders}`],
+                ['Average Order Value', `$${averageOrderValue.toFixed(2)}`],
+            ],
+            theme: 'striped'
+        });
+
+        // --- Top Selling Products ---
+        const allLineItems = filteredSales.flatMap(s => s.lineItems);
+        const productSalesMap = allLineItems.reduce<Record<string, { name: string; unitsSold: number; grossRevenue: number }>>((acc, item) => {
+            if (!acc[item.productId]) {
+                acc[item.productId] = { name: item.name, unitsSold: 0, grossRevenue: 0 };
             }
-        }
+            acc[item.productId].unitsSold += item.quantity;
+            acc[item.productId].grossRevenue += item.subtotal;
+            return acc;
+        }, {});
+        const topProductsData = Object.values(productSalesMap).sort((a, b) => b.unitsSold - a.unitsSold);
+
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Top Selling Products", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            head: [['Product', 'Units Sold', 'Gross Revenue']],
+            body: topProductsData.map(p => [p.name, p.unitsSold, `$${p.grossRevenue.toFixed(2)}`]),
+            theme: 'grid'
+        });
+
+        // --- Sales by Payment Method ---
+        const paymentData = filteredSales.reduce((acc, sale) => {
+            if (!acc[sale.payment]) acc[sale.payment] = 0;
+            acc[sale.payment] += sale.total;
+            return acc;
+        }, {} as Record<string, number>);
+
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Sales by Payment Method", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            head: [['Payment Method', 'Total Sales']],
+            body: Object.entries(paymentData).map(([method, total]) => [method, `$${total.toFixed(2)}`]),
+            theme: 'grid'
+        });
+
+        // --- Inventory Valuation ---
+        const invSummary = products.reduce((acc, p) => {
+            acc.totalUnits += p.stock;
+            acc.totalCostValue += p.stock * p.cost;
+            acc.totalRetailValue += p.stock * p.price;
+            return acc;
+        }, { totalUnits: 0, totalCostValue: 0, totalRetailValue: 0 });
+        invSummary.potentialProfit = invSummary.totalRetailValue - invSummary.totalCostValue;
+
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Inventory Valuation", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            body: [
+                ['Total Units', invSummary.totalUnits.toLocaleString()],
+                ['Total Cost Value', `$${invSummary.totalCostValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+                ['Total Retail Value', `$${invSummary.totalRetailValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+                ['Potential Profit', `$${invSummary.potentialProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`],
+            ],
+            theme: 'striped'
+        });
+        doc.autoTable({
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            head: [['Product', 'Stock', 'Cost/Unit', 'Total Cost', 'Price/Unit', 'Total Retail']],
+            body: products.map(p => [
+                p.name, p.stock, `$${p.cost.toFixed(2)}`, `$${(p.stock * p.cost).toFixed(2)}`, `$${p.price.toFixed(2)}`, `$${(p.stock * p.price).toFixed(2)}`
+            ]),
+            theme: 'grid'
+        });
+
+        // --- Inventory Status ---
+        const statusCounts = products.reduce((acc, product) => {
+            if(!acc[product.status]) acc[product.status] = 0;
+            acc[product.status]++;
+            return acc;
+        }, {} as Record<Product['status'], number>);
         
-        // remove the first blank page
-        doc.deletePage(1);
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Inventory Status", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            head: [['Status', 'Number of Products']],
+            body: Object.entries(statusCounts).map(([status, count]) => [status, count]),
+            theme: 'grid'
+        });
 
+
+        // --- Expense Breakdown ---
+        const filteredExpenses = allExpenses.filter(expense => {
+            const expenseDate = new Date(expense.issueDate);
+            return (expenseDate >= startOfDay(date.from as Date)) && (expenseDate <= endOfDay(date.to as Date));
+        });
+        const totalSpent = filteredExpenses.reduce((acc, exp) => acc + exp.total, 0);
+        const expensesByVendor = filteredExpenses.reduce((acc, exp) => {
+            const vendorName = vendors.find(v => v.id === exp.vendorId)?.name || 'Unknown Vendor';
+            if (!acc[vendorName]) acc[vendorName] = 0;
+            acc[vendorName] += exp.total;
+            return acc;
+        }, {} as Record<string, number>);
+
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text("Expense Breakdown", 15, 20);
+        doc.autoTable({
+            startY: 25,
+            body: [
+                ['Total Spent', `$${totalSpent.toFixed(2)}`],
+                ['Expense Count', `${filteredExpenses.length}`],
+            ],
+            theme: 'striped'
+        });
+         doc.autoTable({
+            startY: (doc as any).lastAutoTable.finalY + 10,
+            head: [['Vendor', 'Total Expenses']],
+            body: Object.entries(expensesByVendor).map(([vendor, total]) => [vendor, `$${total.toFixed(2)}`]),
+            theme: 'grid'
+        });
+
+
+        // --- Finalize and Save ---
+        doc.deletePage(1); // Remove the initial blank page
         doc.save(`Cloudo-Report-${dateString}.pdf`);
-
         setIsGenerating(false);
     };
 
@@ -124,8 +235,8 @@ export default function ReportsPage() {
                  <div className="flex flex-wrap items-center gap-2">
                     <DatePickerWithRange date={date} setDate={setDate} />
                     <Button onClick={handleGeneratePdf} disabled={isGenerating}>
-                        {isGenerating ? <Loader2 className="animate-spin" /> : <FileDown />}
-                        <span className="ml-2 hidden sm:inline">Generate PDF</span>
+                        {isGenerating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                        <span className="hidden sm:inline">Generate PDF</span>
                     </Button>
                  </div>
             </div>
@@ -144,60 +255,21 @@ export default function ReportsPage() {
                     <TabsTrigger value="inventory">Inventory Reports</TabsTrigger>
                     <TabsTrigger value="expenses">Expense Reports</TabsTrigger>
                 </TabsList>
-            </Tabs>
-            
-            <div className="reports-container space-y-8 mt-4">
-                <div className={cn("space-y-8", activeTab !== 'sales' && 'hidden')}>
-                    <div ref={salesSummaryRef}>
-                        <SalesSummaryReport dateRange={date} />
-                    </div>
+                 <TabsContent value="sales" className="space-y-8 mt-4">
+                    <SalesSummaryReport dateRange={date} />
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                        <div ref={topSellingRef}>
-                            <TopSellingProductsReport dateRange={date} />
-                        </div>
-                        <div ref={paymentMethodsRef}>
-                            <PaymentMethodsReport dateRange={date} />
-                        </div>
-                    </div>
-                </div>
-                <div className={cn("space-y-8", activeTab !== 'inventory' && 'hidden')}>
-                    <div ref={inventoryValuationRef}>
-                       <InventoryValuationReport />
-                    </div>
-                    <div ref={inventoryStatusRef}>
-                       <InventoryStatusReport />
-                    </div>
-                </div>
-                 <div className={cn("space-y-8", activeTab !== 'expenses' && 'hidden')}>
-                    <div ref={expenseBreakdownRef}>
-                       <ExpenseBreakdownReport dateRange={date} />
-                    </div>
-                </div>
-            </div>
-            {/* Hidden container for PDF generation, ensures all elements are in the DOM */}
-            <div className="absolute -left-[9999px] -top-[9999px] w-[1000px] opacity-0" aria-hidden="true">
-                <div className="space-y-8">
-                     <div ref={salesSummaryRef}>
-                        <SalesSummaryReport dateRange={date} />
-                    </div>
-                    <div ref={topSellingRef}>
                         <TopSellingProductsReport dateRange={date} />
-                    </div>
-                    <div ref={paymentMethodsRef}>
                         <PaymentMethodsReport dateRange={date} />
                     </div>
-                     <div ref={inventoryValuationRef}>
-                       <InventoryValuationReport />
-                    </div>
-                    <div ref={inventoryStatusRef}>
-                       <InventoryStatusReport />
-                    </div>
-                     <div ref={expenseBreakdownRef}>
-                       <ExpenseBreakdownReport dateRange={date} />
-                    </div>
-                </div>
-            </div>
-
+                </TabsContent>
+                <TabsContent value="inventory" className="space-y-8 mt-4">
+                    <InventoryValuationReport />
+                    <InventoryStatusReport />
+                </TabsContent>
+                <TabsContent value="expenses" className="space-y-8 mt-4">
+                    <ExpenseBreakdownReport dateRange={date} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
