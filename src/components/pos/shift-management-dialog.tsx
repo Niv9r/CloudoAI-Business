@@ -41,19 +41,25 @@ export default function ShiftManagementDialog({
 }: ShiftManagementDialogProps) {
   const [startingFloat, setStartingFloat] = useState('');
   const [actualCash, setActualCash] = useState('');
+  const [discrepancyNotes, setDiscrepancyNotes] = useState('');
 
   const shiftSummary = useMemo(() => {
     if (mode !== 'end' || !shift) return null;
 
-    const expectedCash = sales.reduce((acc, sale) => (sale.payment === 'Cash' ? acc + sale.total : acc), 0);
-    const expectedCard = sales.reduce((acc, sale) => (sale.payment === 'Card' ? acc + sale.total : acc), 0);
-    const totalSales = expectedCash + expectedCard;
-    const expectedDrawer = shift.startingCashFloat + expectedCash;
-    const discrepancy = parseFloat(actualCash) - expectedDrawer;
+    const cashSales = sales.reduce((acc, sale) => (sale.payment === 'Cash' ? acc + sale.total : acc), 0);
+    const cardSales = sales.reduce((acc, sale) => (sale.payment === 'Card' || sale.payment === 'Split' ? acc + sale.total : acc), 0);
+    const totalSales = cashSales + cardSales;
+    const expectedDrawer = shift.startingCashFloat + cashSales;
+    
+    let discrepancy = 0;
+    if (actualCash) {
+        discrepancy = parseFloat(actualCash) - expectedDrawer;
+    }
+
 
     return {
-      expectedCash,
-      expectedCard,
+      cashSales,
+      cardSales,
       totalSales,
       expectedDrawer,
       discrepancy,
@@ -64,6 +70,7 @@ export default function ShiftManagementDialog({
     if (!isOpen) {
         setStartingFloat('');
         setActualCash('');
+        setDiscrepancyNotes('');
     }
   }, [isOpen])
 
@@ -77,7 +84,14 @@ export default function ShiftManagementDialog({
 
   const handleEnd = () => {
     const cashValue = parseFloat(actualCash);
-    if (!isNaN(cashValue) && onEndShift) {
+    if (!isNaN(cashValue) && onEndShift && shiftSummary) {
+        // In a real app, you would pass the full shift object with summary
+        console.log({
+            ...shift,
+            endingCashFloat: cashValue,
+            ...shiftSummary,
+            notes: discrepancyNotes
+        })
         onEndShift(cashValue);
     }
   }
@@ -85,12 +99,11 @@ export default function ShiftManagementDialog({
   const isEndShiftButtonDisabled = useMemo(() => {
     const cashValue = parseFloat(actualCash);
     if (isNaN(cashValue)) return true;
-    if (shiftSummary?.discrepancy !== 0) {
-        // Here you could add a check for a required discrepancy reason
-        return false;
+    if (shiftSummary?.discrepancy !== 0 && !discrepancyNotes) {
+        return true;
     }
     return false;
-  }, [actualCash, shiftSummary]);
+  }, [actualCash, shiftSummary, discrepancyNotes]);
 
 
   return (
@@ -143,18 +156,14 @@ export default function ShiftManagementDialog({
                     </div>
                 </div>
                 <div className="space-y-2 rounded-lg border p-4">
-                    <h4 className="font-semibold">Summary</h4>
+                    <h4 className="font-semibold">Cash Reconciliation</h4>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Starting Float</span>
                         <span>${shift.startingCashFloat.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Cash Payments</span>
-                        <span>+ ${shiftSummary.expectedCash.toFixed(2)}</span>
-                    </div>
-                     <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Card Payments</span>
-                        <span>${shiftSummary.expectedCard.toFixed(2)}</span>
+                        <span>+ ${shiftSummary.cashSales.toFixed(2)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-semibold">
@@ -190,7 +199,12 @@ export default function ShiftManagementDialog({
                 {shiftSummary.discrepancy !== 0 && actualCash && (
                     <div className='space-y-2'>
                         <Label htmlFor='discrepancy-reason'>Reason for Discrepancy (Required)</Label>
-                        <Textarea id="discrepancy-reason" placeholder="e.g., Incorrect change given..." />
+                        <Textarea 
+                            id="discrepancy-reason" 
+                            placeholder="e.g., Incorrect change given..."
+                            value={discrepancyNotes}
+                            onChange={(e) => setDiscrepancyNotes(e.target.value)}
+                         />
                     </div>
                 )}
             </div>

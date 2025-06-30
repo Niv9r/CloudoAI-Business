@@ -1,4 +1,4 @@
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift } from './types';
 
 export const products: Product[] = [
   {
@@ -193,7 +193,7 @@ export const sales: Sale[] = [
   },
   {
     id: "SALE-00122",
-    timestamp: "2024-05-27T14:30:00Z",
+    timestamp: "2024-05-28T14:30:00Z",
     customer: "Jackson Lee",
     employee: "Admin User",
     subtotal: 37.49,
@@ -209,7 +209,7 @@ export const sales: Sale[] = [
   },
   {
     id: "SALE-00121",
-    timestamp: "2024-05-27T11:15:00Z",
+    timestamp: "2024-05-28T11:15:00Z",
     customer: "Isabella Nguyen",
     employee: "Admin User",
     subtotal: 269.97,
@@ -224,9 +224,9 @@ export const sales: Sale[] = [
   },
   {
     id: "SALE-00120",
-    timestamp: "2024-05-26T18:45:00Z",
+    timestamp: "2024-05-27T18:45:00Z",
     customer: "William Kim",
-    employee: "Admin User",
+    employee: "Jane Smith",
     subtotal: 99.98,
     tax: 10.00,
     discount: 0,
@@ -240,9 +240,9 @@ export const sales: Sale[] = [
   },
   {
     id: "SALE-00119",
-    timestamp: "2024-05-26T09:05:00Z",
+    timestamp: "2024-05-27T09:05:00Z",
     customer: "Sofia Davis",
-    employee: "Admin User",
+    employee: "Jane Smith",
     subtotal: 31.98,
     tax: 3.20,
     discount: 0,
@@ -388,3 +388,33 @@ export const stockAdjustments: StockAdjustment[] = [
         employee: 'Admin User'
     }
 ];
+
+export const shifts: Shift[] = [
+    {
+        id: 'SHIFT-2024-05-28',
+        employeeId: 'Admin User',
+        startTime: '2024-05-28T09:00:00Z',
+        endTime: '2024-05-28T17:00:00Z',
+        startingCashFloat: 150.00,
+        endingCashFloat: 191.24,
+        cashSales: 41.24,
+        cardSales: 2221.81,
+        totalSales: 2263.05,
+        discrepancy: 0,
+        status: 'reconciled'
+    },
+    {
+        id: 'SHIFT-2024-05-27',
+        employeeId: 'Jane Smith',
+        startTime: '2024-05-27T09:00:00Z',
+        endTime: '2024-05-27T17:00:00Z',
+        startingCashFloat: 150.00,
+        endingCashFloat: 150.00,
+        cashSales: 0,
+        cardSales: 145.16,
+        totalSales: 145.16,
+        discrepancy: -5.00,
+        notes: 'Gave incorrect change on one transaction.',
+        status: 'reconciled'
+    }
+]

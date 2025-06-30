@@ -88,8 +88,13 @@ export type Shift = {
     endTime?: string;
     startingCashFloat: number;
     endingCashFloat?: number;
-    actualCashTotal?: number;
     status: 'open' | 'closed' | 'reconciled';
+    notes?: string;
+    // For historical/reconciled shifts
+    cashSales?: number;
+    cardSales?: number;
+    totalSales?: number;
+    discrepancy?: number;
 };
 
 export type Vendor = {
