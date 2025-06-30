@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Printer, CreditCard } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface SaleDetailsDialogProps {
   isOpen: boolean;
@@ -32,6 +33,14 @@ interface SaleDetailsDialogProps {
 
 export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDetailsDialogProps) {
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsClient(true);
+    }
+  }, [isOpen]);
+
 
   const handlePrintReceipt = () => {
     toast({
@@ -46,7 +55,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale }: SaleDe
         <DialogHeader>
           <DialogTitle>Sale Details: {sale.id}</DialogTitle>
           <DialogDescription>
-            {format(new Date(sale.timestamp), 'PPpp')}
+            {isClient ? format(new Date(sale.timestamp), 'PPpp') : <>&nbsp;</>}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

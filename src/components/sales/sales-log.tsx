@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -31,6 +31,11 @@ export default function SalesLog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleViewDetails = (sale: Sale) => {
     setSelectedSale(sale);
@@ -131,7 +136,7 @@ export default function SalesLog() {
               {filteredSales.length > 0 ? filteredSales.map((sale) => (
                 <TableRow key={sale.id}>
                   <TableCell className="font-medium">{sale.id}</TableCell>
-                  <TableCell>{format(new Date(sale.timestamp), 'PPpp')}</TableCell>
+                  <TableCell>{isClient ? format(new Date(sale.timestamp), 'PPpp') : ""}</TableCell>
                   <TableCell>{sale.customer}</TableCell>
                   <TableCell>{sale.payment}</TableCell>
                   <TableCell>
