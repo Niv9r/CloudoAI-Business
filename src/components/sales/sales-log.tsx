@@ -80,23 +80,23 @@ export default function SalesLog() {
 
   return (
     <>
-      <Card className="h-full flex flex-col">
+      <Card className="flex h-full w-full flex-col">
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>Search, filter, and review all sales and returns.</CardDescription>
         </CardHeader>
-        <div className="flex flex-col md:flex-row items-center gap-4 px-6 pb-4 border-b">
-          <div className="relative flex-1 w-full md:grow-0">
+        <div className="flex flex-col items-center gap-4 px-6 pb-4 border-b md:flex-row">
+          <div className="relative w-full flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search by ID, customer..."
-              className="pl-8 w-full"
+              className="w-full pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <div className="flex w-full flex-col gap-4 sm:flex-row md:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by status" />
@@ -117,7 +117,7 @@ export default function SalesLog() {
             </Button>
           )}
         </div>
-        <CardContent className="flex-1 p-0 overflow-auto">
+        <CardContent className="flex-1 overflow-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>

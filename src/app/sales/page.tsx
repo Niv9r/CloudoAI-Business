@@ -18,9 +18,7 @@ export default function SalesPage() {
           </Button>
         </Link>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <SalesLog />
-      </div>
+      <SalesLog />
     </div>
   );
 }
