@@ -18,7 +18,8 @@ import {
   Settings,
   ShoppingCart,
   Users,
-  Tablet
+  Tablet,
+  ClipboardList
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -32,8 +33,9 @@ export default function AppSidebar() {
     { href: '/pos', label: 'POS', icon: Tablet },
     { href: '/sales', label: 'Sales', icon: ShoppingCart },
     { href: '/inventory', label: 'Inventory', icon: Package },
+    { href: '/purchase-orders', label: 'Purchase Orders', icon: ClipboardList },
     { href: '#', label: 'Reports', icon: BarChart3 },
-    { href: '#', label: 'Customers', icon: Users },
+    { href: '#', 'label': 'Customers', icon: Users },
     { href: '/expenses', label: 'Expenses', icon: CreditCard },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];

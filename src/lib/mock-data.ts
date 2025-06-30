@@ -1,4 +1,4 @@
-import type { Product, Customer, Sale, Vendor, Expense } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder } from './types';
 
 export const products: Product[] = [
   {
@@ -285,4 +285,56 @@ export const expenses: Expense[] = [
         total: 250.00,
         status: 'Pending',
     },
+];
+
+export const purchaseOrders: PurchaseOrder[] = [
+    {
+        id: 'PO-2024-001',
+        vendorId: 'VEND004',
+        issueDate: '2024-05-10T00:00:00.000Z',
+        expectedDate: '2024-05-20T00:00:00.000Z',
+        lineItems: [
+            { productId: 'PROD001', quantity: 50, unitCost: 9.50, quantityReceived: 50 },
+            { productId: 'PROD008', quantity: 30, unitCost: 7.00, quantityReceived: 30 },
+        ],
+        total: 685.00,
+        status: 'Received',
+        notes: 'Annual restock of core coffee and tea products.'
+    },
+    {
+        id: 'PO-2024-002',
+        vendorId: 'VEND001',
+        issueDate: '2024-05-22T00:00:00.000Z',
+        expectedDate: '2024-06-01T00:00:00.000Z',
+        lineItems: [
+            { productId: 'PROD009', quantity: 10, unitCost: 55.00, quantityReceived: 5 },
+        ],
+        total: 550.00,
+        status: 'Partially Received',
+        notes: 'Backordered items. Second shipment expected next week.'
+    },
+    {
+        id: 'PO-2024-003',
+        vendorId: 'VEND002',
+        issueDate: '2024-05-28T00:00:00.000Z',
+        expectedDate: '2024-06-05T00:00:00.000Z',
+        lineItems: [
+            { productId: 'PROD010', quantity: 20, unitCost: 65.00, quantityReceived: 0 },
+            { productId: 'PROD002', quantity: 25, unitCost: 30.00, quantityReceived: 0 },
+        ],
+        total: 2050.00,
+        status: 'Ordered',
+    },
+    {
+        id: 'PO-2024-004',
+        vendorId: 'VEND003',
+        issueDate: '2024-05-30T00:00:00.000Z',
+        expectedDate: '2024-06-10T00:00:00.000Z',
+        lineItems: [
+            { productId: 'PROD004', quantity: 100, unitCost: 15.00, quantityReceived: 0 },
+        ],
+        total: 1500.00,
+        status: 'Draft',
+        notes: 'Awaiting final approval from management.'
+    }
 ];

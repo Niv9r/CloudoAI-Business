@@ -128,3 +128,37 @@ export type Expense = {
   status: 'Draft' | 'Pending' | 'Paid' | 'Overdue';
   notes?: string;
 };
+
+export const poLineItemSchema = z.object({
+  productId: z.string().min(1, 'Product is required.'),
+  quantity: z.coerce.number().min(1, 'Quantity must be at least 1.'),
+  unitCost: z.coerce.number().min(0, 'Cost must be a positive number.'),
+});
+
+export const purchaseOrderFormSchema = z.object({
+  vendorId: z.string().min(1, 'Please select a vendor.'),
+  issueDate: z.date({ required_error: 'Issue date is required.'}),
+  expectedDate: z.date({ required_error: 'Expected date is required.'}),
+  lineItems: z.array(poLineItemSchema).min(1, 'At least one line item is required.'),
+  notes: z.string().optional(),
+});
+
+export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
+
+export type PurchaseOrderLineItem = {
+    productId: string;
+    quantity: number;
+    unitCost: number;
+    quantityReceived: number;
+};
+
+export type PurchaseOrder = {
+    id: string;
+    vendorId: string;
+    issueDate: string; // ISO String
+    expectedDate: string; // ISO String
+    lineItems: PurchaseOrderLineItem[];
+    total: number;
+    status: 'Draft' | 'Ordered' | 'Partially Received' | 'Received' | 'Cancelled';
+    notes?: string;
+};

@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect } from 'react';
 import type { CartItem, Product, Customer, Discount, HeldOrder, Shift, Sale } from '@/lib/types';
 import ProductGrid from '@/components/pos/product-grid';
 import Cart from '@/components/pos/cart';
-import { products as allProducts, sales as mockSales } from '@/lib/mock-data';
+import { useInventory } from '@/context/inventory-context';
+import { sales as mockSales } from '@/lib/mock-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Archive, LogOut } from 'lucide-react';
@@ -14,6 +15,7 @@ import HeldOrdersDialog from '@/components/pos/held-orders-dialog';
 import ShiftManagementDialog from '@/components/pos/shift-management-dialog';
 
 export default function PosPage() {
+  const { products } = useInventory();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
@@ -206,7 +208,7 @@ export default function PosPage() {
                         </div>
                       </CardHeader>
                       <CardContent className='p-4 pt-0 flex-1'>
-                          <ProductGrid products={allProducts} onAddToCart={handleAddToCart} />
+                          <ProductGrid products={products} onAddToCart={handleAddToCart} />
                       </CardContent>
                   </Card>
               </div>

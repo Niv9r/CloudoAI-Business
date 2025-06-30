@@ -8,7 +8,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { products as allProducts } from '@/lib/mock-data';
 import type { Product } from '@/lib/types';
 import { z } from 'genkit';
 
@@ -76,10 +75,10 @@ Here is the current inventory data:
 
 export async function handleSuggestReorder(
   prevState: any,
-  formData: FormData
+  products: Product[]
 ): Promise<SuggestReorderOutput & { error: string | null }> {
   try {
-    const result = await suggestReorderFlow({ products: allProducts });
+    const result = await suggestReorderFlow({ products });
     return { ...result, error: null };
   } catch (e: any) {
     console.error(e);
