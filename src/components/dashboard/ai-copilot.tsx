@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useFormStatus, useActionState } from 'react-dom';
+import { useEffect, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { handleBusinessCopilotQuery } from '@/ai/flows/business-copilot-flow';
 import { useInventory } from '@/context/inventory-context';
 import { sales, expenses } from '@/lib/mock-data'; // Using mock data for now
