@@ -39,7 +39,7 @@ const businessCopilotFlow = ai.defineFlow(
         output: { schema: BusinessCopilotOutputSchema },
         prompt: `You are 'CLOUDO Co-Pilot', an expert business analyst AI. Your goal is to provide concise, data-driven insights based on the user's question and the provided business data.
 
-Analyze the user's question and the provided JSON data context to generate a helpful and accurate response. Format your response in markdown for readability.
+Analyze the user's question and the provided JSON data context to generate a helpful and accurate response. The data context includes products, sales, and expenses. The sales data includes an 'employee' field, allowing you to answer questions about sales performance per employee. Format your response in markdown for readability.
 
 If the user's query suggests a clear next step or action that can be performed within the app, identify the most relevant page from this list and include it in the 'suggestedActionLink' field.
 Available pages:
@@ -54,7 +54,7 @@ Available pages:
 - /purchase-orders: Purchase Orders
 - /stock-adjustments: Stock Adjustments
 
-For example, if the user asks "Which products are low on stock?", you should suggest the '/inventory' page. If they ask about recent sales, suggest '/sales'.
+For example, if the user asks "Which products are low on stock?", you should suggest the '/inventory' page. If they ask about recent sales, suggest '/sales'. If they ask "Who is my top performing employee?", analyze the sales data and provide an answer.
 
 User's question:
 "{{{query}}}"

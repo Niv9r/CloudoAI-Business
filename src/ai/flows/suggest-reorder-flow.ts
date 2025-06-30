@@ -75,7 +75,7 @@ Here is the current inventory data:
 
 export async function handleSuggestReorder(
   prevState: any,
-  products: Product[]
+  products: Pick<Product, 'id' | 'name' | 'stock' | 'status'>[]
 ): Promise<SuggestReorderOutput & { error: string | null }> {
   try {
     const result = await suggestReorderFlow({ products });
