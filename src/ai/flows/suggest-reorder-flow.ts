@@ -42,7 +42,7 @@ const SuggestReorderOutputSchema = z.object({
 });
 export type SuggestReorderOutput = z.infer<typeof SuggestReorderOutputSchema>;
 
-export const suggestReorderFlow = ai.defineFlow(
+const suggestReorderFlow = ai.defineFlow(
   {
     name: 'suggestReorderFlow',
     inputSchema: SuggestReorderInputSchema,

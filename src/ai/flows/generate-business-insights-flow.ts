@@ -13,7 +13,7 @@ const GenerateBusinessInsightsInputSchema = z.object({
   businessContext: z.string().describe('A JSON string containing all relevant business data like products, sales, and expenses.'),
 });
 
-export const BusinessInsightsOutputSchema = z.object({
+const BusinessInsightsOutputSchema = z.object({
   revenueAndProfit: z.string().describe("Markdown formatted insights on revenue and profit. Analyze sales data, identify trends, top-performing days/products, and profitability. Include a summary and key bullet points."),
   inventory: z.string().describe("Markdown formatted insights on inventory. Analyze product stock levels, identify slow-moving vs. fast-moving items, point out items that are out of stock or low stock, and suggest potential reorder actions. Include a summary and key bullet points."),
   employeePerformance: z.string().describe("Markdown formatted insights on employee performance. Analyze sales data attributed to employees, identify top performers, and comment on sales distribution. Include a summary and key bullet points."),
