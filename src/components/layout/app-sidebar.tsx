@@ -28,8 +28,8 @@ export default function AppSidebar() {
 
   const menuItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '#', label: 'Sales', icon: ShoppingCart },
-    { href: '#', label: 'Inventory', icon: Package },
+    { href: '/sales', label: 'Sales', icon: ShoppingCart },
+    { href: '/inventory', label: 'Inventory', icon: Package },
     { href: '#', label: 'Reports', icon: BarChart3 },
     { href: '#', label: 'Customers', icon: Users },
     { href: '#', label: 'Expenses', icon: CreditCard },
