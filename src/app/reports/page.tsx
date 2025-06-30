@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfYear, format } from 'date-fns';
+import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, format, startOfDay, endOfDay } from 'date-fns';
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SalesSummaryReport from '@/components/reports/sales-summary-report';
@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useInventory } from '@/context/inventory-context';
 import type { Product } from '@/lib/types';
 import { useBusiness } from '@/context/business-context';
-import { startOfDay as startOfDayFns, endOfDay as endOfDayFns } from 'date-fns';
 
 
 export default function ReportsPage() {
@@ -65,7 +64,7 @@ export default function ReportsPage() {
         // --- Sales Summary ---
         const filteredSales = allSales.filter(sale => {
             const saleDate = new Date(sale.timestamp);
-            return (saleDate >= startOfDayFns(date.from as Date)) && (saleDate <= endOfDayFns(date.to as Date));
+            return (saleDate >= startOfDay(date.from as Date)) && (saleDate <= endOfDay(date.to as Date));
         });
 
         const grossSales = filteredSales.reduce((acc, sale) => acc + sale.subtotal, 0);
@@ -179,7 +178,7 @@ export default function ReportsPage() {
         // --- Expense Breakdown ---
         const filteredExpenses = allExpenses.filter(expense => {
             const expenseDate = new Date(expense.issueDate);
-            return (expenseDate >= startOfDayFns(date.from as Date)) && (expenseDate <= endOfDayFns(date.to as Date));
+            return (expenseDate >= startOfDay(date.from as Date)) && (expenseDate <= endOfDay(date.to as Date));
         });
         const totalSpent = filteredExpenses.reduce((acc, exp) => acc + exp.total, 0);
         const expensesByVendor = filteredExpenses.reduce((acc, exp) => {

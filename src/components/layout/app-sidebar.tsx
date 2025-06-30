@@ -131,11 +131,9 @@ export default function AppSidebar() {
                       <SidebarMenuSub>
                           {item.subItems.map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                  <Link href={subItem.href} asChild>
-                                      <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                                          {subItem.label}
-                                      </SidebarMenuSubButton>
-                                  </Link>
+                                  <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
+                                      <Link href={subItem.href}>{subItem.label}</Link>
+                                  </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
