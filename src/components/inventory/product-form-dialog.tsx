@@ -1,0 +1,160 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { productFormSchema, type ProductFormValues, type Product } from '@/lib/types';
+import { Textarea } from '../ui/textarea';
+
+interface ProductFormDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: ProductFormValues) => void;
+  product: Product | null;
+}
+
+export default function ProductFormDialog({ isOpen, onOpenChange, onSave, product }: ProductFormDialogProps) {
+  const isEditMode = !!product;
+
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: '',
+      sku: '',
+      category: '',
+      price: 0,
+      stock: 0,
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(
+        product
+          ? { ...product }
+          : {
+              name: '',
+              sku: '',
+              category: '',
+              price: 0,
+              stock: 0,
+            }
+      );
+    }
+  }, [isOpen, product, form]);
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      form.reset();
+    }
+    onOpenChange(open);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Update the details for this product.' : 'Fill out the form to add a new product to your inventory.'}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSave)} className="grid gap-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Artisan Coffee Beans" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SKU</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., ACB-250G" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Coffee" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className='grid grid-cols-2 gap-4'>
+                <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Price ($)</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="15.99" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="stock"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Stock Quantity</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="120" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <DialogFooter className='pt-4'>
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button type="submit">
+                    {isEditMode ? 'Save Changes' : 'Add Product'}
+                </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

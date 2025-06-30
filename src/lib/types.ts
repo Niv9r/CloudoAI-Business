@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type Business = {
     id: string;
     name: string;
@@ -8,13 +10,18 @@ export type Business = {
     timezone: string;
 };
 
-export type Product = {
+export const productFormSchema = z.object({
+  name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
+  sku: z.string().min(3, { message: 'SKU must be at least 3 characters.' }),
+  category: z.string().min(2, { message: 'Category is required.' }),
+  price: z.coerce.number().min(0, { message: 'Price must be a positive number.' }),
+  stock: z.coerce.number().int({ message: 'Stock must be a whole number.' }).min(0, { message: 'Stock cannot be negative.' }),
+});
+
+export type ProductFormValues = z.infer<typeof productFormSchema>;
+
+export type Product = ProductFormValues & {
     id: string;
-    name: string;
-    sku: string;
-    category: string;
-    stock: number;
-    price: number;
     status: "In Stock" | "Out of Stock" | "Low Stock";
 };
 
