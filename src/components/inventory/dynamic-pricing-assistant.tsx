@@ -4,13 +4,14 @@
 import { useActionState, useTransition } from 'react';
 import type { Product } from '@/lib/types';
 import { handleMarketResearch, type MarketResearchOutput } from '@/ai/flows/dynamic-pricing-flow';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { WandSparkles, Loader2, BarChart, Link as LinkIcon, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { cn } from '@/lib/utils';
 
 const initialState: { result?: MarketResearchOutput; error?: string; } = {
   result: undefined,
@@ -90,10 +91,13 @@ export default function MarketResearchAssistant({ product }: { product: Product 
                                       <p className="font-medium">{c.productName}</p>
                                       <p className="text-lg font-semibold">£{c.price.toFixed(2)}</p>
                                   </div>
-                                  <a href={c.url} target="_blank" rel="noopener noreferrer">
-                                      <Button variant="outline" size="sm">
-                                          View <LinkIcon className="ml-2 h-3 w-3" />
-                                      </Button>
+                                  <a 
+                                    href={c.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                                  >
+                                      View <LinkIcon className="ml-2 h-3 w-3" />
                                   </a>
                               </li>
                           ))}

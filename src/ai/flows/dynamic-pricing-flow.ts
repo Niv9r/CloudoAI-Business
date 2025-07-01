@@ -74,7 +74,7 @@ const marketResearchFlow = ai.defineFlow(
     name: 'marketResearchFlow',
     inputSchema: MarketResearchInputSchema,
     outputSchema: MarketResearchOutputSchema,
-    model: 'googleai/gemini-1.5-flash-preview',
+    model: 'googleai/gemini-2.0-flash',
   },
   async (input) => {
     const prompt = ai.definePrompt({
