@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI flow for conducting market research on products.
@@ -74,7 +73,7 @@ const marketResearchFlow = ai.defineFlow(
     name: 'marketResearchFlow',
     inputSchema: MarketResearchInputSchema,
     outputSchema: MarketResearchOutputSchema,
-    model: 'googleai/gemini-2.5-flash-preview',
+    model: 'googleai/gemini-2.5-flash',
   },
   async (input) => {
     const prompt = ai.definePrompt({
