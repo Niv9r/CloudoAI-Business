@@ -1,10 +1,10 @@
 
 'use server';
 /**
- * @fileOverview A dynamic pricing engine AI flow.
+ * @fileOverview An AI flow for conducting market research on products.
  *
- * - handleDynamicPricing - A server action wrapper for the flow.
- * - DynamicPricingOutput - The return type for the flow.
+ * - handleMarketResearch - A server action wrapper for the flow.
+ * - MarketResearchOutput - The return type for the flow.
  */
 
 import { ai } from '@/ai/genkit';
@@ -35,6 +35,8 @@ const googleSearchTool = ai.defineTool(
         { title: 'The Leather Store UK - Mens Wallets', link: 'https://www.leatherstore.co.uk/wallets', snippet: 'Handmade real leather wallets. Prices from £39.99. Free UK delivery.' },
         { title: 'Aspinal of London | Mens Leather Wallets', link: 'https://www.aspinaloflondon.com/mens-collection/mens-wallets', snippet: 'Discover our luxury collection of men\'s leather wallets. Billfold wallets from £95.' },
         { title: 'John Lewis - Leather Wallets', link: 'https://www.johnlewis.com/men/mens-accessories/wallets', snippet: 'Shop for leather wallets at John Lewis & Partners. Prices range from £35 to £150.' },
+        { title: 'Fossil UK - Men\'s Wallets', link: 'https://www.fossil.com/en-gb/men/wallets/', snippet: 'Men\'s leather wallets from Fossil. Our top selling wallets are around £55.' },
+        { title: 'Marks & Spencer - Wallets', link: 'https://www.marksandspencer.com/l/men/accessories/wallets', snippet: 'Stylish and practical leather wallets for men. Prices start at just £22.50.' },
       ];
     }
     // Generic fallback for other products
@@ -47,53 +49,51 @@ const googleSearchTool = ai.defineTool(
 
 
 // 2. Define the input and output schemas for the flow
-const DynamicPricingInputSchema = z.object({
+const MarketResearchInputSchema = z.object({
   productName: z.string(),
   productCategory: z.string(),
   currentPrice: z.number(),
 });
 
-const DynamicPricingOutputSchema = z.object({
-  suggestedPrice: z.number().describe('The AI-suggested optimal price for the product.'),
-  reasoning: z.string().describe('A markdown-formatted summary explaining the rationale behind the suggested price.'),
-  competitors: z.array(
+const MarketResearchOutputSchema = z.object({
+  marketSummary: z.string().describe('A markdown-formatted summary of the market research findings, including price ranges, common product names, and overall market positioning.'),
+  marketAnalysis: z.array(
     z.object({
-      productName: z.string().describe('The name of the competitor\'s product or the store name.'),
-      price: z.number().describe('The price of the competitor\'s product.'),
-      url: z.string().url().describe('The direct URL to the competitor\'s product page.'),
+      productName: z.string().describe("The name of the competitor's product or the store name."),
+      price: z.number().describe("The price of the competitor's product."),
+      url: z.string().url().describe("The direct URL to the competitor's product page."),
     })
-  ).describe('A list of key competitors found during the search.'),
+  ).describe('A comprehensive list of all relevant products found during the market research.'),
 });
-export type DynamicPricingOutput = z.infer<typeof DynamicPricingOutputSchema>;
+export type MarketResearchOutput = z.infer<typeof MarketResearchOutputSchema>;
 
 
 // 3. Define the main AI flow
-const dynamicPricingFlow = ai.defineFlow(
+const marketResearchFlow = ai.defineFlow(
   {
-    name: 'dynamicPricingFlow',
-    inputSchema: DynamicPricingInputSchema,
-    outputSchema: DynamicPricingOutputSchema,
+    name: 'marketResearchFlow',
+    inputSchema: MarketResearchInputSchema,
+    outputSchema: MarketResearchOutputSchema,
     model: 'googleai/gemini-1.5-flash-preview',
   },
   async (input) => {
     const prompt = ai.definePrompt({
-        name: 'dynamicPricingPrompt',
-        input: { schema: DynamicPricingInputSchema },
-        output: { schema: DynamicPricingOutputSchema },
+        name: 'marketResearchPrompt',
+        input: { schema: MarketResearchInputSchema },
+        output: { schema: MarketResearchOutputSchema },
         tools: [googleSearchTool],
-        prompt: `You are a dynamic pricing analyst for a UK-based retail business. Your task is to analyze a product and suggest an optimal price based on competitor pricing in the UK market.
+        prompt: `You are a Market Research Analyst for a UK-based retail business. Your task is to perform a comprehensive market analysis for a given product and present your findings.
 
 Product to analyze:
 - Name: {{{productName}}}
 - Category: {{{productCategory}}}
-- Current Price: £{{{currentPrice}}}
+- Our Current Price: £{{{currentPrice}}}
 
 Instructions:
-1.  Use the googleSearchTool to search for similar products available for sale in the UK. Use search queries like "{{{productName}}} price uk" or "buy {{{productCategory}}} uk".
-2.  Analyze the search results to identify 3-5 key competitors and their pricing. Extract the price as a number.
-3.  Based on the competitor prices, determine a suggested new price for the product. The goal is to be competitive but also maximize profit.
-4.  Provide a brief reasoning for your price suggestion. Explain how it positions the product in the market (e.g., "This price places us slightly below the premium brands like Aspinal but above the budget options...").
-5.  List the top competitors you found, including their product name (or a close equivalent), price, and a direct URL to their product page from the search results.
+1.  Use the googleSearchTool to search for similar products available for sale in the UK. Use multiple search queries like "{{{productName}}} price uk", "buy {{{productCategory}}} uk", and similar variations to gather broad data.
+2.  Analyze all search results to identify as many relevant competitors and their prices as possible. Extract the price as a number from the search result snippet or title.
+3.  Provide a concise 'marketSummary' in markdown. This summary should synthesize your findings, mentioning the general price range you discovered, any noticeable market tiers (e.g., budget, mid-range, premium), and how our current price fits into this landscape.
+4.  Compile a comprehensive 'marketAnalysis' list of all the competitor products you found. For each, include the product/store name, its price, and the direct URL from the search result.
 `,
     });
     
@@ -104,15 +104,15 @@ Instructions:
 
 
 // 4. Create a server action to be called from the UI
-interface PricingState {
-  result?: DynamicPricingOutput;
+interface ResearchState {
+  result?: MarketResearchOutput;
   error?: string;
 }
 
-export async function handleDynamicPricing(
-  prevState: PricingState,
+export async function handleMarketResearch(
+  prevState: ResearchState,
   formData: FormData
-): Promise<PricingState> {
+): Promise<ResearchState> {
   const productData = formData.get('product') as string;
 
   if (!productData) {
@@ -121,7 +121,7 @@ export async function handleDynamicPricing(
 
   try {
     const product = JSON.parse(productData);
-    const result = await dynamicPricingFlow({
+    const result = await marketResearchFlow({
         productName: product.name,
         productCategory: product.category,
         currentPrice: product.price,
@@ -131,7 +131,7 @@ export async function handleDynamicPricing(
     console.error(e);
     const errorMessage = e instanceof Error ? e.message : 'An unexpected AI error occurred.';
     return {
-      error: `An error occurred while analyzing pricing: ${errorMessage}`,
+      error: `An error occurred while analyzing the market: ${errorMessage}`,
     };
   }
 }

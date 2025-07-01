@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -23,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { productFormSchema, type ProductFormValues, type Product } from '@/lib/types';
 import { Separator } from '../ui/separator';
-import DynamicPricingAssistant from './dynamic-pricing-assistant';
+import MarketResearchAssistant from './dynamic-pricing-assistant';
 
 interface ProductFormDialogProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           <DialogDescription>
@@ -81,7 +82,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSave)} className="grid gap-4 py-4">
+          <form onSubmit={form.handleSubmit(onSave)} className="grid gap-4 py-4 overflow-y-auto pr-6">
             <FormField
               control={form.control}
               name="name"
@@ -166,11 +167,11 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
             {isEditMode && product && (
                 <>
                     <Separator />
-                    <DynamicPricingAssistant product={product} />
+                    <MarketResearchAssistant product={product} />
                 </>
             )}
 
-            <DialogFooter className='pt-4'>
+            <DialogFooter className='pt-4 sticky bottom-0 bg-background'>
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
                 <Button type="submit">
                     {isEditMode ? 'Save Changes' : 'Add Product'}
