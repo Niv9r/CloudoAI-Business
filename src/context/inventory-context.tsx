@@ -728,6 +728,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     updateDiscountCode,
     deleteDiscountCode,
   }), [
+    db, // Add db to dependencies to reflect state changes
     getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts, getWholesaleOrders, getDiscountCodes, getDiscountByCode,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
     addSale, processRefund, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
