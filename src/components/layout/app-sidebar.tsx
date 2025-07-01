@@ -135,16 +135,16 @@ export default function AppSidebar() {
           {visibleNavConfig.map((item) => (
             item.type === 'link' ? (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
-                  <SidebarMenuButton
-                    as="a"
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                  >
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href}
+                  tooltip={item.label}
+                >
+                  <Link href={item.href}>
                     <item.icon />
                     <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             ) : (
               permissions.has(item.permission) &&
@@ -165,11 +165,11 @@ export default function AppSidebar() {
                             .filter(subItem => permissions.has(subItem.permission))
                             .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                <Link href={subItem.href} passHref>
-                                  <SidebarMenuSubButton as="a" isActive={pathname.startsWith(subItem.href)}>
+                                <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
+                                  <Link href={subItem.href}>
                                         {subItem.label}
-                                  </SidebarMenuSubButton>
-                                </Link>
+                                  </Link>
+                                </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
