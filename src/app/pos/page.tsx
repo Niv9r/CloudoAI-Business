@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,9 +14,11 @@ import CustomerSearchDialog from '@/components/pos/customer-search-dialog';
 import HeldOrdersDialog from '@/components/pos/held-orders-dialog';
 import ShiftManagementDialog from '@/components/pos/shift-management-dialog';
 import { useBusiness } from '@/context/business-context';
+import { useEmployee } from '@/context/employee-context';
 
 export default function PosPage() {
   const { selectedBusiness } = useBusiness();
+  const { currentEmployee } = useEmployee();
   const { getProducts, getSales, addSale, getShifts, addShift, endShift: endShiftInContext } = useInventory();
   
   const products = getProducts(selectedBusiness.id);
@@ -36,7 +39,8 @@ export default function PosPage() {
 
   // Load active shift or prompt to start a new one
   useEffect(() => {
-    const activeShift = getShifts(selectedBusiness.id).find(s => s.status === 'open');
+    if (!currentEmployee) return;
+    const activeShift = getShifts(selectedBusiness.id).find(s => s.status === 'open' && s.employeeId === currentEmployee.id);
     if (activeShift) {
       setCurrentShift(activeShift);
       const shiftSales = sales.filter(sale => new Date(sale.timestamp) >= new Date(activeShift.startTime));
@@ -46,7 +50,7 @@ export default function PosPage() {
       setCurrentShift(null);
       setIsShiftDialogOpen(true);
     }
-  }, [selectedBusiness.id, getShifts, sales]);
+  }, [selectedBusiness.id, getShifts, sales, currentEmployee]);
 
 
   const handleAddToCart = (product: Product) => {
@@ -102,8 +106,9 @@ export default function PosPage() {
       setDiscount(null);
   }
 
-  const handleSaleComplete = (newSaleData: Omit<Sale, 'id' | 'employee'>) => {
-    const newSale = addSale(selectedBusiness.id, newSaleData);
+  const handleSaleComplete = (newSaleData: Omit<Sale, 'id' | 'employeeId'>) => {
+    if (!currentEmployee) return;
+    const newSale = addSale(selectedBusiness.id, newSaleData, currentEmployee.id);
     setSalesThisShift(prev => [...prev, newSale]);
     handleClearSale();
     setIsChargeModalOpen(false);
@@ -161,7 +166,8 @@ export default function PosPage() {
   
   // --- Shift Management Handlers ---
   const handleStartShift = (startingFloat: number) => {
-    const newShift = addShift(selectedBusiness.id, startingFloat);
+    if(!currentEmployee) return;
+    const newShift = addShift(selectedBusiness.id, startingFloat, currentEmployee.id);
     setCurrentShift(newShift);
     setIsShiftDialogOpen(false);
   };
@@ -179,7 +185,7 @@ export default function PosPage() {
   if (!currentShift) {
     return (
         <ShiftManagementDialog
-            key={selectedBusiness.id}
+            key={`${selectedBusiness.id}-${currentEmployee?.id}`}
             mode="start"
             onStartShift={handleStartShift}
             isOpen={isShiftDialogOpen}

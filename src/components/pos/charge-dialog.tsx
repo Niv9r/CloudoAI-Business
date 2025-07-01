@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,7 +24,7 @@ interface ChargeDialogProps {
   cart: CartItem[];
   customer: Customer | null;
   discount: Discount | null;
-  onSaleComplete: (saleData: Omit<Sale, 'id' | 'employee'>) => void;
+  onSaleComplete: (saleData: Omit<Sale, 'id' | 'employeeId'>) => void;
 }
 
 type PaymentStep = 'payment' | 'complete';
@@ -98,7 +99,7 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, dis
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Construct the sale object
-    const newSaleData: Omit<Sale, 'id' | 'employee'> = {
+    const newSaleData: Omit<Sale, 'id' | 'employeeId'> = {
         timestamp: new Date().toISOString(),
         customer: customer ? `${customer.firstName} ${customer.lastName}` : 'Guest',
         subtotal: subtotal,

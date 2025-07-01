@@ -1,5 +1,25 @@
 
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission } from './types';
+import { PERMISSIONS } from './types';
+
+const allPermissions = new Set(PERMISSIONS);
+const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses']);
+const cashierPermissions = new Set<Permission>(['process_sales']);
+
+export const mockRoles: Record<string, Role[]> = {
+    biz_1: [
+        { id: 'role_admin', name: 'Admin', permissions: allPermissions },
+        { id: 'role_manager', name: 'Manager', permissions: managerPermissions },
+        { id: 'role_cashier', name: 'Cashier', permissions: cashierPermissions },
+    ],
+    biz_2: [
+        { id: 'role_admin_b2', name: 'Admin', permissions: allPermissions },
+    ],
+    biz_3: [
+        { id: 'role_admin_b3', name: 'Admin', permissions: allPermissions },
+    ]
+}
+
 
 type MockDb = {
   products: Record<string, Product[]>;
@@ -11,6 +31,8 @@ type MockDb = {
   stockAdjustments: Record<string, StockAdjustment[]>;
   shifts: Record<string, Shift[]>;
   wholesaleOrders: Record<string, WholesaleOrder[]>;
+  employees: Record<string, Employee[]>;
+  roles: Record<string, Role[]>;
 }
 
 export const mockDb: MockDb = {
@@ -47,11 +69,11 @@ export const mockDb: MockDb = {
   },
   sales: {
     biz_1: [
-      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customer: "Olivia Martin", employee: "Admin User", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, subtotal: 249.95 },], },
-      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customer: "Jackson Lee", employee: "Admin User", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, subtotal: 24.99 }, { productId: "PROD008", name: "Organic Green Tea", quantity: 1, unitPrice: 12.50, subtotal: 12.50 },], },
+      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customer: "Olivia Martin", employeeId: "emp_1", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, subtotal: 249.95 },], },
+      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customer: "Jackson Lee", employeeId: "emp_2", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, subtotal: 24.99 }, { productId: "PROD008", name: "Organic Green Tea", quantity: 1, unitPrice: 12.50, subtotal: 12.50 },], },
     ],
     biz_2: [
-        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customer: "Guest", employee: "Admin User", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, subtotal: 3.75 }] }
+        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customer: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, subtotal: 3.75 }] }
     ],
     biz_3: []
   },
@@ -85,17 +107,17 @@ export const mockDb: MockDb = {
   },
   stockAdjustments: {
     biz_1: [
-      { id: 'ADJ-001', productId: 'PROD004', timestamp: '2024-05-29T09:00:00.000Z', type: 'Damage', quantity: -2, notes: 'Items found damaged in storage.', employee: 'Admin User' }
+      { id: 'ADJ-001', productId: 'PROD004', timestamp: '2024-05-29T09:00:00.000Z', type: 'Damage', quantity: -2, notes: 'Items found damaged in storage.', employeeId: 'emp_1' }
     ],
     biz_2: [],
     biz_3: []
   },
   shifts: {
     biz_1: [
-      { id: 'SHIFT-2024-05-28', employeeId: 'Admin User', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-28', employeeId: 'emp_1', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'reconciled' },
     ],
     biz_2: [
-      { id: 'SHIFT-2024-05-29-B2', employeeId: 'Admin User', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-29-B2', employeeId: 'emp_b2_1', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'reconciled' },
     ],
     biz_3: []
   },
@@ -106,5 +128,19 @@ export const mockDb: MockDb = {
     ],
     biz_2: [],
     biz_3: [],
+  },
+  roles: mockRoles,
+  employees: {
+      biz_1: [
+        { id: 'emp_1', name: 'Admin User', email: 'admin@artisangoods.com', pin: '1234', roleId: 'role_admin' },
+        { id: 'emp_2', name: 'John Manager', email: 'john@artisangoods.com', pin: '1111', roleId: 'role_manager' },
+        { id: 'emp_3', name: 'Jane Cashier', email: 'jane@artisangoods.com', pin: '2222', roleId: 'role_cashier' },
+      ],
+      biz_2: [
+        { id: 'emp_b2_1', name: 'Cafe Admin', email: 'admin@downtowncafe.com', pin: '0000', roleId: 'role_admin_b2' },
+      ],
+      biz_3: [
+        { id: 'emp_b3_1', name: 'Book Nook Admin', email: 'admin@thebooknook.co.uk', pin: '9876', roleId: 'role_admin_b3' },
+      ]
   }
 };

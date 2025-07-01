@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -8,6 +9,7 @@ import AppHeader from '@/components/layout/app-header';
 import { BusinessProvider } from '@/context/business-context';
 import { InventoryProvider } from '@/context/inventory-context';
 import { CustomerProvider } from '@/context/customer-context';
+import { EmployeeProvider } from '@/context/employee-context';
 
 export const metadata: Metadata = {
   title: 'CLOUDO Professional',
@@ -28,21 +30,23 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <BusinessProvider>
-          <InventoryProvider>
-            <CustomerProvider>
-              <SidebarProvider>
-                <div className="relative flex min-h-screen w-full">
-                  <AppSidebar />
-                  <div className="flex flex-1 flex-col overflow-hidden">
-                    <AppHeader />
-                    <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                      {children}
-                    </main>
+          <EmployeeProvider>
+            <InventoryProvider>
+              <CustomerProvider>
+                <SidebarProvider>
+                  <div className="relative flex min-h-screen w-full">
+                    <AppSidebar />
+                    <div className="flex flex-1 flex-col overflow-hidden">
+                      <AppHeader />
+                      <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                        {children}
+                      </main>
+                    </div>
                   </div>
-                </div>
-              </SidebarProvider>
-            </CustomerProvider>
-          </InventoryProvider>
+                </SidebarProvider>
+              </CustomerProvider>
+            </InventoryProvider>
+          </EmployeeProvider>
         </BusinessProvider>
         <Toaster />
       </body>

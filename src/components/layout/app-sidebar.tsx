@@ -29,19 +29,22 @@ import {
   Tablet,
   Lightbulb,
   ChevronRight,
+  Users,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useEmployee } from '@/context/employee-context';
 
 const navConfig = [
-  { type: 'link' as const, href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { type: 'link' as const, href: '/insights', label: 'Insights', icon: Lightbulb },
-  { type: 'link' as const, href: '/pos', label: 'POS', icon: Tablet },
+  { type: 'link' as const, href: '/', label: 'Dashboard', icon: LayoutDashboard, permission: 'view_reports' },
+  { type: 'link' as const, href: '/insights', label: 'Insights', icon: Lightbulb, permission: 'view_reports' },
+  { type: 'link' as const, href: '/pos', label: 'POS', icon: Tablet, permission: 'process_sales' },
   {
     type: 'group' as const,
     label: 'Sales',
     icon: ShoppingCart,
+    permission: 'process_sales',
     subItems: [
       { href: '/sales', label: 'Sales Log' },
       { href: '/wholesale', label: 'Wholesale' },
@@ -53,6 +56,7 @@ const navConfig = [
     type: 'group' as const,
     label: 'Inventory',
     icon: Package,
+    permission: 'manage_inventory',
     subItems: [
       { href: '/inventory', label: 'Products' },
       { href: '/purchase-orders', label: 'Purchase Orders' },
@@ -64,17 +68,28 @@ const navConfig = [
     type: 'group' as const,
     label: 'Finance',
     icon: Landmark,
+    permission: 'manage_expenses',
     subItems: [
       { href: '/expenses', label: 'Expenses' },
       { href: '/reports', label: 'Reports' },
     ],
   },
-  { type: 'link' as const, href: '/settings', label: 'Settings', icon: Settings },
+  {
+    type: 'group' as const,
+    label: 'Management',
+    icon: Users,
+    permission: 'access_settings',
+    subItems: [
+      { href: '/employees', label: 'Employees' },
+      { href: '/settings', label: 'Business Settings' },
+    ],
+  }
 ];
 
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { employees, currentEmployee, setCurrentEmployee, permissions } = useEmployee();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
@@ -92,6 +107,15 @@ export default function AppSidebar() {
     setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
+  const handleEmployeeChange = (employeeId: string) => {
+      const employee = employees.find(e => e.id === employeeId);
+      if(employee) {
+        setCurrentEmployee(employee);
+      }
+  }
+
+  const visibleNavConfig = navConfig.filter(item => permissions.has(item.permission));
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -102,11 +126,12 @@ export default function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {navConfig.map((item) => (
+          {visibleNavConfig.map((item) => (
             item.type === 'link' ? (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} asChild>
+                <Link href={item.href} legacyBehavior passHref>
                   <SidebarMenuButton
+                    as="a"
                     isActive={pathname === item.href}
                     tooltip={item.label}
                   >
@@ -131,9 +156,11 @@ export default function AppSidebar() {
                       <SidebarMenuSub>
                           {item.subItems.map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                  <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
-                                      <Link href={subItem.href}>{subItem.label}</Link>
-                                  </SidebarMenuSubButton>
+                                  <Link href={subItem.href} legacyBehavior passHref>
+                                    <SidebarMenuSubButton as="a" isActive={pathname.startsWith(subItem.href)}>
+                                        {subItem.label}
+                                    </SidebarMenuSubButton>
+                                  </Link>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
@@ -145,17 +172,22 @@ export default function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex items-center gap-3 p-2">
-          <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person portrait" />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
-          <div className="overflow-hidden">
-            <p className="font-semibold truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">
-              admin@cloudo.pro
-            </p>
-          </div>
+         <div className="flex flex-col gap-2 p-2">
+            <label className="text-xs text-sidebar-foreground/70 px-2 group-data-[collapsible=icon]:hidden">
+                Current User
+            </label>
+            <Select value={currentEmployee?.id} onValueChange={handleEmployeeChange}>
+              <SelectTrigger className="w-full bg-sidebar-accent border-sidebar-border group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-2">
+                <SelectValue placeholder="Select Employee">
+                  <span className="group-data-[collapsible=icon]:hidden">{currentEmployee?.name}</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map(emp => (
+                  <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
         </div>
       </SidebarFooter>
     </Sidebar>

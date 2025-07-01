@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Sale } from '@/lib/types';
@@ -25,6 +26,7 @@ import { format } from 'date-fns';
 import { Printer, CreditCard, Undo2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RefundDialog from './refund-dialog';
+import { useEmployee } from '@/context/employee-context';
 
 interface SaleDetailsDialogProps {
   isOpen: boolean;
@@ -35,6 +37,8 @@ interface SaleDetailsDialogProps {
 
 export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProcessRefund }: SaleDetailsDialogProps) {
   const { toast } = useToast();
+  const { getEmployees, permissions } = useEmployee();
+
   const [isClient, setIsClient] = useState(false);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
 
@@ -45,6 +49,12 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
     }
   }, [isOpen]);
 
+  const getEmployeeName = (employeeId: string) => {
+      // In a real app, you might fetch this from a context or a hook
+      const employee = getEmployees(sale.id.split('-')[0]).find(e => e.id === employeeId);
+      return employee ? employee.name : 'Unknown';
+  }
+
 
   const handlePrintReceipt = () => {
     toast({
@@ -53,7 +63,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
     });
   };
 
-  const isRefundable = sale.status === 'Completed' || sale.status === 'Partially Refunded';
+  const isRefundable = (sale.status === 'Completed' || sale.status === 'Partially Refunded') && permissions.has('process_refunds');
 
   return (
     <>
@@ -73,7 +83,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold">Employee</h4>
-              <p className="text-sm text-muted-foreground">{sale.employee}</p>
+              <p className="text-sm text-muted-foreground">{getEmployeeName(sale.employeeId)}</p>
             </div>
           </div>
           <Separator />

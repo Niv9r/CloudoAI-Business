@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -13,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { format } from 'date-fns';
 import type { StockAdjustment, Product } from "@/lib/types";
 import { Badge } from "../ui/badge";
+import { useEmployee } from "@/context/employee-context";
+import { useBusiness } from "@/context/business-context";
 
 interface AdjustmentsLogProps {
   adjustments: StockAdjustment[];
@@ -21,6 +24,9 @@ interface AdjustmentsLogProps {
 
 export default function AdjustmentsLog({ adjustments, products }: AdjustmentsLogProps) {
   const [isClient, setIsClient] = useState(false);
+  const { selectedBusiness } = useBusiness();
+  const { getEmployees } = useEmployee();
+  const employees = getEmployees(selectedBusiness.id);
 
   useEffect(() => {
     setIsClient(true);
@@ -28,6 +34,10 @@ export default function AdjustmentsLog({ adjustments, products }: AdjustmentsLog
   
   const getProductName = (productId: string) => {
     return products.find(p => p.id === productId)?.name || 'Unknown Product';
+  }
+  
+  const getEmployeeName = (employeeId: string) => {
+    return employees.find(e => e.id === employeeId)?.name || 'Unknown';
   }
 
   return (
@@ -58,7 +68,7 @@ export default function AdjustmentsLog({ adjustments, products }: AdjustmentsLog
                     {adj.quantity > 0 ? `+${adj.quantity}`: adj.quantity}
                 </TableCell>
                 <TableCell>{adj.notes}</TableCell>
-                <TableCell>{adj.employee}</TableCell>
+                <TableCell>{getEmployeeName(adj.employeeId)}</TableCell>
               </TableRow>
             )) : (
               <TableRow>

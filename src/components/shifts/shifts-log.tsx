@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -16,6 +17,8 @@ import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { format } from 'date-fns';
 import type { Shift } from "@/lib/types";
+import { useEmployee } from "@/context/employee-context";
+import { useBusiness } from "@/context/business-context";
 
 interface ShiftsLogProps {
   shifts: Shift[];
@@ -24,10 +27,17 @@ interface ShiftsLogProps {
 
 export default function ShiftsLog({ shifts, onViewDetails }: ShiftsLogProps) {
   const [isClient, setIsClient] = useState(false);
+  const { selectedBusiness } = useBusiness();
+  const { getEmployees } = useEmployee();
+  const employees = getEmployees(selectedBusiness.id);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const getEmployeeName = (employeeId: string) => {
+    return employees.find(e => e.id === employeeId)?.name || 'Unknown';
+  }
 
   return (
     <Card className="h-full flex flex-col">
@@ -55,7 +65,7 @@ export default function ShiftsLog({ shifts, onViewDetails }: ShiftsLogProps) {
               <TableRow key={shift.id}>
                 <TableCell className="font-medium">{shift.id}</TableCell>
                 <TableCell>{isClient ? format(new Date(shift.startTime), 'PPP') : ''}</TableCell>
-                <TableCell>{shift.employeeId}</TableCell>
+                <TableCell>{getEmployeeName(shift.employeeId)}</TableCell>
                 <TableCell>
                   <Badge variant={shift.status === 'reconciled' ? 'default' : 'secondary'}>
                     {shift.status}

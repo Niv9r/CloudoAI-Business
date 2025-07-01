@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,9 +9,11 @@ import { useInventory } from '@/context/inventory-context';
 import AdjustmentsLog from '@/components/stock-adjustments/adjustments-log';
 import AdjustmentFormDialog from '@/components/stock-adjustments/adjustment-form-dialog';
 import { useBusiness } from '@/context/business-context';
+import { useEmployee } from '@/context/employee-context';
 
 export default function StockAdjustmentsPage() {
   const { selectedBusiness } = useBusiness();
+  const { currentEmployee } = useEmployee();
   const { getProducts, getStockAdjustments, adjustStock } = useInventory();
   
   const products = getProducts(selectedBusiness.id);
@@ -23,7 +26,8 @@ export default function StockAdjustmentsPage() {
   };
 
   const handleSaveAdjustment = (data: StockAdjustmentFormValues) => {
-    adjustStock(selectedBusiness.id, data);
+    if (!currentEmployee) return;
+    adjustStock(selectedBusiness.id, data, currentEmployee.id);
     setIsFormOpen(false);
   };
   

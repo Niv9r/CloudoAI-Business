@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from "react";
@@ -24,11 +25,14 @@ import { DatePickerWithRange } from "../ui/date-picker";
 import type { DateRange } from "react-day-picker";
 import { useBusiness } from "@/context/business-context";
 import { useInventory } from "@/context/inventory-context";
+import { useEmployee } from "@/context/employee-context";
 
 export default function SalesLog() {
   const { selectedBusiness } = useBusiness();
+  const { getEmployees } = useEmployee();
   const { getSales, processRefund } = useInventory();
   const sales = getSales(selectedBusiness.id);
+  const employees = getEmployees(selectedBusiness.id);
 
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const { toast } = useToast();
@@ -66,13 +70,17 @@ export default function SalesLog() {
     setDateRange(undefined);
   };
 
+  const getEmployeeName = (employeeId: string) => {
+      return employees.find(e => e.id === employeeId)?.name || 'Unknown';
+  }
+
   const filteredSales = useMemo(() => {
     return sales.filter(sale => {
       // Search term filter
       const searchMatch = searchTerm.toLowerCase() === '' ||
         sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.employee.toLowerCase().includes(searchTerm.toLowerCase());
+        getEmployeeName(sale.employeeId).toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
       const statusMatch = statusFilter === 'all' || sale.status === statusFilter;
@@ -86,7 +94,7 @@ export default function SalesLog() {
 
       return searchMatch && statusMatch && dateMatch;
     });
-  }, [sales, searchTerm, statusFilter, dateRange]);
+  }, [sales, searchTerm, statusFilter, dateRange, employees]);
 
   const hasActiveFilters = searchTerm !== "" || statusFilter !== "all" || dateRange !== undefined;
 
@@ -136,6 +144,7 @@ export default function SalesLog() {
                 <TableHead>Sale ID</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Employee</TableHead>
                 <TableHead>Payment</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -150,6 +159,7 @@ export default function SalesLog() {
                   <TableCell className="font-medium">{sale.id}</TableCell>
                   <TableCell>{isClient ? format(new Date(sale.timestamp), 'PPpp') : ""}</TableCell>
                   <TableCell>{sale.customer}</TableCell>
+                  <TableCell>{getEmployeeName(sale.employeeId)}</TableCell>
                   <TableCell>{sale.payment}</TableCell>
                   <TableCell>
                     <Badge variant={sale.status === 'Completed' ? 'default' : sale.status.includes('Refunded') ? 'destructive' : 'secondary'}>
@@ -175,7 +185,7 @@ export default function SalesLog() {
                 </TableRow>
               )) : (
                 <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                         No results found.
                     </TableCell>
                 </TableRow>

@@ -11,6 +11,43 @@ export type Business = {
     timezone: string;
 };
 
+// New Types for Employee & Role Management
+
+export const PERMISSIONS = [
+    'access_settings',
+    'view_reports',
+    'manage_inventory',
+    'manage_employees',
+    'process_sales',
+    'process_refunds',
+    'manage_expenses',
+    'manage_purchase_orders',
+    'manage_wholesale_orders'
+] as const;
+export type Permission = typeof PERMISSIONS[number];
+
+export type Role = {
+    id: string;
+    name: string;
+    permissions: Set<Permission>;
+};
+
+export const employeeFormSchema = z.object({
+  name: z.string().min(2, 'Employee name must be at least 2 characters.'),
+  email: z.string().email('Invalid email address.'),
+  pin: z.string().length(4, 'PIN must be exactly 4 digits.').regex(/^\d{4}$/, 'PIN must be numeric.'),
+  roleId: z.string().min(1, 'A role must be selected.'),
+});
+export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
+
+export type Employee = EmployeeFormValues & {
+    id: string;
+};
+
+
+// --- End of New Types ---
+
+
 export const productFormSchema = z.object({
   name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
   sku: z.string().min(3, { message: 'SKU must be at least 3 characters.' }),
@@ -73,7 +110,7 @@ export type Sale = {
   id: string;
   timestamp: string;
   customer: string;
-  employee: string;
+  employeeId: string;
   total: number;
   status: "Completed" | "Refunded" | "Partially Refunded";
   payment: "Card" | "Cash" | "Split";
@@ -206,7 +243,7 @@ export type StockAdjustment = {
     type: StockAdjustmentType;
     quantity: number; // can be positive or negative
     notes: string;
-    employee: string; // User who made the adjustment
+    employeeId: string; // User who made the adjustment
 };
 
 // Types for B2B/Wholesale Module
