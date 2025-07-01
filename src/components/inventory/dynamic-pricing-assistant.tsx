@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useTransition } from 'react';
 import type { Product } from '@/lib/types';
 import { handleDynamicPricing } from '@/ai/flows/dynamic-pricing-flow';
 import { Button } from '@/components/ui/button';
@@ -15,27 +14,17 @@ const initialState = {
   error: undefined,
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Analyzing Market...
-        </>
-      ) : (
-        <>
-          <WandSparkles className="mr-2 h-4 w-4" />
-          Suggest Optimal Price
-        </>
-      )}
-    </Button>
-  );
-}
-
 export default function DynamicPricingAssistant({ product }: { product: Product }) {
   const [state, formAction] = useActionState(handleDynamicPricing, initialState);
+  const [isPending, startTransition] = useTransition();
+
+  const runAction = () => {
+    const formData = new FormData();
+    formData.append('product', JSON.stringify(product));
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
 
   return (
     <div>
@@ -44,11 +33,21 @@ export default function DynamicPricingAssistant({ product }: { product: Product 
         <p className="text-sm text-muted-foreground">
           Use AI to analyze competitor pricing in the UK market and get a suggested selling price for this product.
         </p>
-        <form action={formAction}>
-          <input type="hidden" name="product" value={JSON.stringify(product)} />
-          <SubmitButton />
-        </form>
-
+        
+        <Button onClick={runAction} disabled={isPending}>
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing Market...
+            </>
+          ) : (
+            <>
+              <WandSparkles className="mr-2 h-4 w-4" />
+              Suggest Optimal Price
+            </>
+          )}
+        </Button>
+        
         {state.error && (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
