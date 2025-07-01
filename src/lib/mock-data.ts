@@ -3,20 +3,20 @@ import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdju
 import { PERMISSIONS } from './types';
 
 const allPermissions = new Set(PERMISSIONS);
-const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts']);
+const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts', 'view_timesheets', 'view_payroll']);
 const cashierPermissions = new Set<Permission>(['process_sales']);
 
 export const mockRoles: Record<string, Role[]> = {
     biz_1: [
-        { id: 'role_admin', name: 'Admin', permissions: allPermissions },
-        { id: 'role_manager', name: 'Manager', permissions: managerPermissions },
-        { id: 'role_cashier', name: 'Cashier', permissions: cashierPermissions },
+        { id: 'role_admin', name: 'Admin', permissions: allPermissions, hourlyRate: 50, commissionRate: 10 },
+        { id: 'role_manager', name: 'Manager', permissions: managerPermissions, hourlyRate: 35, commissionRate: 5 },
+        { id: 'role_cashier', name: 'Cashier', permissions: cashierPermissions, hourlyRate: 20, commissionRate: 2 },
     ],
     biz_2: [
-        { id: 'role_admin_b2', name: 'Admin', permissions: allPermissions },
+        { id: 'role_admin_b2', name: 'Admin', permissions: allPermissions, hourlyRate: 55, commissionRate: 12 },
     ],
     biz_3: [
-        { id: 'role_admin_b3', name: 'Admin', permissions: allPermissions },
+        { id: 'role_admin_b3', name: 'Admin', permissions: allPermissions, hourlyRate: 60, commissionRate: 15 },
     ]
 }
 
@@ -70,8 +70,8 @@ export const mockDb: MockDb = {
   },
   sales: {
     biz_1: [
-      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customerId: "CUST001", customerName: "Olivia Martin", employeeId: "emp_1", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, costAtTimeOfSale: 65.00, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, costAtTimeOfSale: 22.50, subtotal: 249.95 },], },
-      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customerId: "CUST002", customerName: "Jackson Lee", employeeId: "emp_2", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, costAtTimeOfSale: 11.00, subtotal: 24.99 },], },
+      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customerId: "CUST001", customerName: "Olivia Martin", employeeId: "emp_2", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, costAtTimeOfSale: 65.00, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, costAtTimeOfSale: 22.50, subtotal: 249.95 },], },
+      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customerId: "CUST002", customerName: "Jackson Lee", employeeId: "emp_3", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, costAtTimeOfSale: 11.00, subtotal: 24.99 },], },
     ],
     biz_2: [
         { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customerId: null, customerName: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, costAtTimeOfSale: 1.20, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, costAtTimeOfSale: 0.80, subtotal: 3.75 }] }
@@ -115,7 +115,9 @@ export const mockDb: MockDb = {
   },
   shifts: {
     biz_1: [
-      { id: 'SHIFT-2024-05-28', employeeId: 'emp_1', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-28', employeeId: 'emp_2', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-29', employeeId: 'emp_3', startTime: '2024-05-29T09:00:00Z', endTime: '2024-05-29T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 150.00, cashSales: 0.00, cardSales: 0, totalSales: 0, discrepancy: 0, status: 'reconciled' },
+
     ],
     biz_2: [
       { id: 'SHIFT-2024-05-29-B2', employeeId: 'emp_b2_1', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'reconciled' },

@@ -31,6 +31,8 @@ import {
   ChevronRight,
   Users,
   Ticket,
+  Clock,
+  DollarSign,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usePathname } from 'next/navigation';
@@ -82,7 +84,9 @@ const navConfig = [
     icon: Users,
     permission: 'access_settings',
     subItems: [
-      { href: '/employees', label: 'Employees', permission: 'manage_employees' },
+      { href: '/employees', label: 'Employees & Roles', permission: 'manage_employees' },
+      { href: '/timesheets', label: 'Timesheets', permission: 'view_timesheets' },
+      { href: '/payroll', label: 'Payroll', permission: 'view_payroll' },
       { href: '/settings', label: 'Business Settings', permission: 'access_settings' },
     ],
   }
@@ -131,18 +135,19 @@ export default function AppSidebar() {
           {visibleNavConfig.map((item) => (
             item.type === 'link' ? (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={item.label}
-                >
-                  <Link href={item.href}>
+                <Link href={item.href} passHref>
+                  <SidebarMenuButton
+                    as="a"
+                    isActive={pathname === item.href}
+                    tooltip={item.label}
+                  >
                     <item.icon />
                     <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             ) : (
+              permissions.has(item.permission) &&
               <SidebarMenuItem key={item.label} className='group/collapsible'>
                 <Collapsible open={openGroups[item.label] || false} onOpenChange={() => toggleGroup(item.label)}>
                   <CollapsibleTrigger asChild>
@@ -160,11 +165,11 @@ export default function AppSidebar() {
                             .filter(subItem => permissions.has(subItem.permission))
                             .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                  <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
-                                    <Link href={subItem.href}>
+                                <Link href={subItem.href} passHref>
+                                  <SidebarMenuSubButton as="a" isActive={pathname.startsWith(subItem.href)}>
                                         {subItem.label}
-                                    </Link>
                                   </SidebarMenuSubButton>
+                                </Link>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
@@ -197,5 +202,3 @@ export default function AppSidebar() {
     </Sidebar>
   );
 }
-
-    

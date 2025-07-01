@@ -36,6 +36,8 @@ import {
             <TableHeader>
               <TableRow>
                 <TableHead>Role Name</TableHead>
+                <TableHead className="text-right">Hourly Rate</TableHead>
+                <TableHead className="text-right">Commission</TableHead>
                 <TableHead className="text-right">Permissions Granted</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -46,6 +48,8 @@ import {
               {roles.length > 0 ? roles.map((role) => (
                 <TableRow key={role.id}>
                   <TableCell className="font-medium">{role.name}</TableCell>
+                  <TableCell className="text-right">${(role.hourlyRate || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{(role.commissionRate || 0)}%</TableCell>
                   <TableCell className="text-right">{role.permissions.size}</TableCell>
                   <TableCell className="text-right">
                      <DropdownMenu>
@@ -65,7 +69,7 @@ import {
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No roles found.
                   </TableCell>
                 </TableRow>

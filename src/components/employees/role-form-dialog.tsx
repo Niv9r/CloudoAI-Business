@@ -41,6 +41,8 @@ export default function RoleFormDialog({ isOpen, onOpenChange, onSave, role }: R
     defaultValues: {
       name: '',
       permissions: new Set(),
+      hourlyRate: 0,
+      commissionRate: 0,
     },
   });
 
@@ -50,11 +52,15 @@ export default function RoleFormDialog({ isOpen, onOpenChange, onSave, role }: R
         form.reset({
           name: role.name,
           permissions: role.permissions,
+          hourlyRate: role.hourlyRate || 0,
+          commissionRate: role.commissionRate || 0,
         });
       } else {
         form.reset({
           name: '',
           permissions: new Set(),
+          hourlyRate: 0,
+          commissionRate: 0,
         });
       }
     }
@@ -73,7 +79,7 @@ export default function RoleFormDialog({ isOpen, onOpenChange, onSave, role }: R
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Role' : 'Add New Role'}</DialogTitle>
           <DialogDescription>
@@ -96,6 +102,35 @@ export default function RoleFormDialog({ isOpen, onOpenChange, onSave, role }: R
               )}
             />
 
+            <div className="grid grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="hourlyRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hourly Rate ($)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 20.50" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="commissionRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Commission Rate (%)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 5" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormItem>
                 <FormLabel>Permissions</FormLabel>
                 <ScrollArea className="h-64 rounded-md border p-4">
@@ -103,7 +138,7 @@ export default function RoleFormDialog({ isOpen, onOpenChange, onSave, role }: R
                         control={form.control}
                         name="permissions"
                         render={() => (
-                            <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-4">
                                 {PERMISSIONS.map((permission) => (
                                 <FormItem key={permission} className="flex flex-row items-start space-x-3 space-y-0">
                                     <FormControl>

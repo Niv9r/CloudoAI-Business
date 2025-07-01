@@ -23,13 +23,17 @@ export const PERMISSIONS = [
     'manage_expenses',
     'manage_purchase_orders',
     'manage_wholesale_orders',
-    'manage_discounts'
+    'manage_discounts',
+    'view_timesheets',
+    'view_payroll',
 ] as const;
 export type Permission = typeof PERMISSIONS[number];
 
 export const roleFormSchema = z.object({
   name: z.string().min(2, 'Role name must be at least 2 characters.'),
   permissions: z.set(z.enum(PERMISSIONS)),
+  hourlyRate: z.coerce.number().min(0, 'Hourly rate must be a positive number.').optional(),
+  commissionRate: z.coerce.number().min(0).max(100, 'Commission must be between 0 and 100.').optional(),
 });
 export type RoleFormValues = z.infer<typeof roleFormSchema>;
 
@@ -354,5 +358,3 @@ export type BusinessKnowledgeBase = {
     content: string;
     embedding?: number[]; // Vector embedding for semantic search
 };
-
-    
