@@ -81,6 +81,7 @@ const navConfig = [
     subItems: [
       { href: '/expenses', label: 'Expenses', permission: 'manage_expenses' },
       { href: '/reports', label: 'Reports', permission: 'view_reports' },
+      { href: '/reports/custom', label: 'Custom Report Builder', permission: 'build_custom_reports' },
       { href: '/reports/general-ledger', label: 'General Ledger', permission: 'view_reports' },
     ],
   },
@@ -181,11 +182,11 @@ export default function AppSidebar() {
                             .filter(subItem => permissions.has(subItem.permission))
                             .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                <Link href={subItem.href} passHref legacyBehavior>
-                                    <SidebarMenuSubButton as="a" isActive={pathname.startsWith(subItem.href)}>
+                                <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
+                                    <Link href={subItem.href}>
                                             {subItem.label}
-                                    </SidebarMenuSubButton>
-                                </Link>
+                                    </Link>
+                                </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
