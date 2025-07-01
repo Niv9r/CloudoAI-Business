@@ -182,7 +182,7 @@ export default function AppSidebar() {
                             .filter(subItem => permissions.has(subItem.permission))
                             .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
                                     <Link href={subItem.href}>
                                             {subItem.label}
                                     </Link>
