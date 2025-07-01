@@ -26,10 +26,6 @@ const chartConfig = {
     label: 'Cash',
     color: 'hsl(var(--chart-2))',
   },
-  Split: {
-    label: 'Split',
-    color: 'hsl(var(--chart-3))',
-  },
 } satisfies ChartConfig;
 
 export default function PaymentMethodsReport({ dateRange }: PaymentMethodsReportProps) {
@@ -46,12 +42,12 @@ export default function PaymentMethodsReport({ dateRange }: PaymentMethodsReport
       );
     });
 
-    const paymentData = filteredSales.reduce((acc, sale) => {
-      const paymentMethod = sale.payment;
+    const paymentData = filteredSales.flatMap(s => s.payments).reduce((acc, payment) => {
+      const paymentMethod = payment.method;
       if (!acc[paymentMethod]) {
         acc[paymentMethod] = { name: paymentMethod, total: 0, fill: `var(--color-${paymentMethod})` };
       }
-      acc[paymentMethod].total += sale.total;
+      acc[paymentMethod].total += payment.amount;
       return acc;
     }, {} as Record<string, { name: string; total: number; fill: string }>);
 
@@ -103,3 +99,5 @@ export default function PaymentMethodsReport({ dateRange }: PaymentMethodsReport
     </Card>
   );
 }
+
+    

@@ -14,14 +14,18 @@ import PaymentMethodsReport from '@/components/reports/payment-methods-report';
 import InventoryStatusReport from '@/components/reports/inventory-status-report';
 import PnlReport from '@/components/reports/pnl-report';
 import EmployeeSalesReport from '@/components/reports/employee-sales-report';
+import BalanceSheetReport from '@/components/reports/balance-sheet-report';
+import CashFlowReport from '@/components/reports/cash-flow-report';
 import { Button } from '@/components/ui/button';
-import { FileDown, Loader2 } from 'lucide-react';
+import { FileDown, Loader2, Wrench } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 import { useInventory } from '@/context/inventory-context';
 import type { Product } from '@/lib/types';
 import { useBusiness } from '@/context/business-context';
+import Link from 'next/link';
+import { useEmployee } from '@/context/employee-context';
 
 
 export default function ReportsPage() {
@@ -35,6 +39,7 @@ export default function ReportsPage() {
     const { toast } = useToast();
     const { selectedBusiness } = useBusiness();
     const { getProducts, getSales, getExpenses, getVendors } = useInventory();
+    const { permissions } = useEmployee();
 
     const products = getProducts(selectedBusiness.id);
     const allSales = getSales(selectedBusiness.id);
@@ -113,9 +118,9 @@ export default function ReportsPage() {
         });
 
         // --- Sales by Payment Method ---
-        const paymentData = filteredSales.reduce((acc, sale) => {
-            if (!acc[sale.payment]) acc[sale.payment] = 0;
-            acc[sale.payment] += sale.total;
+        const paymentData = filteredSales.flatMap(s => s.payments).reduce((acc, payment) => {
+            if (!acc[payment.method]) acc[payment.method] = 0;
+            acc[payment.method] += payment.amount;
             return acc;
         }, {} as Record<string, number>);
 
@@ -243,6 +248,14 @@ export default function ReportsPage() {
                     <p className="text-muted-foreground">Analyze your business performance.</p>
                 </div>
                  <div className="flex flex-wrap items-center gap-2">
+                    {permissions.has('build_custom_reports') && (
+                        <Link href="/reports/custom" passHref>
+                            <Button variant="outline">
+                                <Wrench className="mr-2 h-4 w-4" />
+                                Custom Report Builder
+                            </Button>
+                        </Link>
+                    )}
                     <DatePickerWithRange date={date} setDate={setDate} />
                     <Button onClick={handleGeneratePdf} disabled={isGenerating}>
                         {isGenerating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
@@ -283,6 +296,8 @@ export default function ReportsPage() {
                 </TabsContent>
                 <TabsContent value="financials" className="space-y-8 mt-4">
                     <PnlReport key={`${selectedBusiness.id}-pnl`} dateRange={date} />
+                    <CashFlowReport key={`${selectedBusiness.id}-cashflow`} dateRange={date} />
+                    <BalanceSheetReport key={`${selectedBusiness.id}-balancesheet`} dateRange={date} />
                 </TabsContent>
             </Tabs>
         </div>

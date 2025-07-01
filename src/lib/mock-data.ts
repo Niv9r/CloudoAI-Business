@@ -1,9 +1,9 @@
 
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission, DiscountCode } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission, DiscountCode, AuditLog } from './types';
 import { PERMISSIONS } from './types';
 
 const allPermissions = new Set(PERMISSIONS);
-const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts', 'view_timesheets', 'view_payroll']);
+const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts', 'view_timesheets', 'view_payroll', 'view_audit_log', 'build_custom_reports']);
 const cashierPermissions = new Set<Permission>(['process_sales']);
 
 export const mockRoles: Record<string, Role[]> = {
@@ -34,6 +34,7 @@ type MockDb = {
   employees: Record<string, Employee[]>;
   roles: Record<string, Role[]>;
   discounts: Record<string, DiscountCode[]>;
+  auditLog: Record<string, AuditLog[]>;
 }
 
 export const mockDb: MockDb = {
@@ -70,11 +71,11 @@ export const mockDb: MockDb = {
   },
   sales: {
     biz_1: [
-      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customerId: "CUST001", customerName: "Olivia Martin", employeeId: "emp_2", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, costAtTimeOfSale: 65.00, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, costAtTimeOfSale: 22.50, subtotal: 249.95 },], },
-      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customerId: "CUST002", customerName: "Jackson Lee", employeeId: "emp_3", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, costAtTimeOfSale: 11.00, subtotal: 24.99 },], },
+      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customerId: "CUST001", customerName: "Olivia Martin", employeeId: "emp_2", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payments: [{ method: 'Card', amount: 1924.84 }], lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, costAtTimeOfSale: 65.00, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, costAtTimeOfSale: 22.50, subtotal: 249.95 },], },
+      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customerId: "CUST002", customerName: "Jackson Lee", employeeId: "emp_3", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payments: [{ method: 'Cash', amount: 41.24 }], lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, costAtTimeOfSale: 11.00, subtotal: 24.99 },], },
     ],
     biz_2: [
-        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customerId: null, customerName: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, costAtTimeOfSale: 1.20, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, costAtTimeOfSale: 0.80, subtotal: 3.75 }] }
+        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customerId: null, customerName: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payments: [{ method: 'Card', amount: 10.18 }], lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, costAtTimeOfSale: 1.20, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, costAtTimeOfSale: 0.80, subtotal: 3.75 }] }
     ],
     biz_3: []
   },
@@ -151,6 +152,15 @@ export const mockDb: MockDb = {
         { id: 'DISC001', code: 'SAVE15', type: 'percentage', value: 15, isActive: true },
         { id: 'DISC002', code: 'TENOFF', type: 'fixed', value: 10, isActive: true },
         { id: 'DISC003', code: 'SUMMERFUN', type: 'percentage', value: 20, isActive: false },
+    ],
+    biz_2: [],
+    biz_3: []
+  },
+  auditLog: {
+    biz_1: [
+        { id: 'LOG001', timestamp: '2024-05-29T10:00:00Z', employeeId: 'emp_1', employeeName: 'Admin User', action: 'role.update', details: 'Updated permissions for role "Manager"' },
+        { id: 'LOG002', timestamp: '2024-05-29T11:00:00Z', employeeId: 'emp_2', employeeName: 'John Manager', action: 'product.create', details: 'Created new product "Designer Sunglasses"' },
+        { id: 'LOG003', timestamp: '2024-05-29T12:00:00Z', employeeId: 'emp_3', employeeName: 'Jane Cashier', action: 'sale.process', details: 'Processed sale SALE-00123 for $1924.84' },
     ],
     biz_2: [],
     biz_3: []

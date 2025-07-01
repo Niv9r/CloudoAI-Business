@@ -26,6 +26,8 @@ export const PERMISSIONS = [
     'manage_discounts',
     'view_timesheets',
     'view_payroll',
+    'view_audit_log',
+    'build_custom_reports',
 ] as const;
 export type Permission = typeof PERMISSIONS[number];
 
@@ -113,6 +115,11 @@ export type SaleLineItem = {
   refundedQuantity?: number;
 };
 
+export type SalePayment = {
+  method: 'Card' | 'Cash';
+  amount: number;
+};
+
 export type Sale = {
   id: string;
   timestamp: string;
@@ -121,7 +128,7 @@ export type Sale = {
   employeeId: string;
   total: number;
   status: "Completed" | "Refunded" | "Partially Refunded";
-  payment: "Card" | "Cash" | "Split";
+  payments: SalePayment[];
   lineItems: SaleLineItem[];
   subtotal: number;
   tax: number;
@@ -321,15 +328,19 @@ export type WholesaleOrder = {
 };
 
 
-// New Types for AI Features
+// --- Audit & Professional Features ---
 
 export type AuditLog = {
     id: string;
     timestamp: string; // ISO String
-    userId: string;
-    action: string; // e.g., 'product.create', 'sale.void', 'user.login'
-    details: Record<string, any>; // Contextual details of the action
+    employeeId: string;
+    employeeName: string;
+    action: string;
+    details: string; 
 };
+
+
+// New Types for AI Features
 
 export type WebsitePageComponent = {
     componentType: 'hero' | 'productList' | 'callToAction' | 'contentBlock';
@@ -358,3 +369,5 @@ export type BusinessKnowledgeBase = {
     content: string;
     embedding?: number[]; // Vector embedding for semantic search
 };
+
+    

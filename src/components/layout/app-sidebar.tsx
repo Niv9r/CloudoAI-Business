@@ -33,6 +33,7 @@ import {
   Ticket,
   Clock,
   DollarSign,
+  ShieldCheck,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usePathname } from 'next/navigation';
@@ -72,7 +73,7 @@ const navConfig = [
     type: 'group' as const,
     label: 'Finance',
     icon: Landmark,
-    permission: 'manage_expenses', // or a new finance permission
+    permission: 'view_reports',
     subItems: [
       { href: '/expenses', label: 'Expenses', permission: 'manage_expenses' },
       { href: '/reports', label: 'Reports', permission: 'view_reports' },
@@ -87,6 +88,7 @@ const navConfig = [
       { href: '/employees', label: 'Employees & Roles', permission: 'manage_employees' },
       { href: '/timesheets', label: 'Timesheets', permission: 'view_timesheets' },
       { href: '/payroll', label: 'Payroll', permission: 'view_payroll' },
+      { href: '/audit-log', label: 'Audit Log', permission: 'view_audit_log' },
       { href: '/settings', label: 'Business Settings', permission: 'access_settings' },
     ],
   }
@@ -202,3 +204,5 @@ export default function AppSidebar() {
     </Sidebar>
   );
 }
+
+    

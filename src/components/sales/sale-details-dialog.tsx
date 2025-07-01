@@ -23,7 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Printer, CreditCard, Undo2 } from 'lucide-react';
+import { Printer, CreditCard, Undo2, DollarSign } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import RefundDialog from './refund-dialog';
 import { useEmployee } from '@/context/employee-context';
@@ -116,10 +116,12 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
           <div className="grid grid-cols-2 gap-4">
             <div className='space-y-2'>
                 <h4 className="font-semibold">Payment Summary</h4>
-                <div className="flex items-center text-sm">
-                    <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>Paid with {sale.payment}</span>
-                </div>
+                 {sale.payments.map((p, i) => (
+                    <div key={i} className="flex items-center text-sm">
+                        {p.method === 'Card' ? <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" /> : <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />}
+                        <span>Paid ${p.amount.toFixed(2)} with {p.method}</span>
+                    </div>
+                 ))}
                 <div className="flex items-center text-sm">
                     <Badge variant={sale.status === 'Completed' ? 'default' : sale.status.includes('Refunded') ? 'destructive' : 'secondary'}>
                         {sale.status}

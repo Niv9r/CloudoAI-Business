@@ -7,7 +7,7 @@ import SalesChart from "@/components/dashboard/sales-chart";
 import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
 import AiCopilot from '@/components/dashboard/ai-copilot';
-import AlertsPanel from '@/components/dashboard/alerts-panel';
+import AnomalyAlerts from "@/components/dashboard/anomaly-alerts";
 import { useBusiness } from '@/context/business-context';
 import { useInventory } from "@/context/inventory-context";
 import { useCustomer } from "@/context/customer-context";
@@ -26,7 +26,7 @@ export default function Home() {
 
 
   const kpis = useMemo(() => {
-    const grossRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
+    const grossRevenue = sales.reduce((acc, sale) => acc + sale.subtotal, 0);
     
     const cogs = sales.flatMap(s => s.lineItems).reduce((acc, item) => acc + (item.costAtTimeOfSale * item.quantity), 0);
     const totalExpenses = expenses.reduce((acc, exp) => acc + exp.total, 0);
@@ -53,7 +53,7 @@ export default function Home() {
       </div>
       
       <div className="w-full">
-        <AlertsPanel key={selectedBusiness.id} />
+        <AnomalyAlerts key={`${selectedBusiness.id}-anomalies`} />
       </div>
 
       <div className="w-full">

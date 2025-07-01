@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -27,7 +28,7 @@ interface ShiftManagementDialogProps {
   shift?: Shift;
   sales?: Sale[];
   onStartShift?: (startingFloat: number) => void;
-  onEndShift?: (actualCash: number) => void;
+  onEndShift?: (actualCash: number, notes?: string) => void;
 }
 
 export default function ShiftManagementDialog({
@@ -46,8 +47,8 @@ export default function ShiftManagementDialog({
   const shiftSummary = useMemo(() => {
     if (mode !== 'end' || !shift) return null;
 
-    const cashSales = sales.reduce((acc, sale) => (sale.payment === 'Cash' ? acc + sale.total : acc), 0);
-    const cardSales = sales.reduce((acc, sale) => (sale.payment === 'Card' || sale.payment === 'Split' ? acc + sale.total : acc), 0);
+    const cashSales = sales.flatMap(s => s.payments).reduce((acc, p) => p.method === 'Cash' ? acc + p.amount : acc, 0);
+    const cardSales = sales.flatMap(s => s.payments).reduce((acc, p) => p.method === 'Card' ? acc + p.amount : acc, 0);
     const totalSales = cashSales + cardSales;
     const expectedDrawer = shift.startingCashFloat + cashSales;
     
@@ -55,7 +56,6 @@ export default function ShiftManagementDialog({
     if (actualCash) {
         discrepancy = parseFloat(actualCash) - expectedDrawer;
     }
-
 
     return {
       cashSales,
@@ -85,14 +85,7 @@ export default function ShiftManagementDialog({
   const handleEnd = () => {
     const cashValue = parseFloat(actualCash);
     if (!isNaN(cashValue) && onEndShift && shiftSummary) {
-        // In a real app, you would pass the full shift object with summary
-        console.log({
-            ...shift,
-            endingCashFloat: cashValue,
-            ...shiftSummary,
-            notes: discrepancyNotes
-        })
-        onEndShift(cashValue);
+        onEndShift(cashValue, discrepancyNotes);
     }
   }
 
@@ -222,3 +215,5 @@ export default function ShiftManagementDialog({
     </Dialog>
   );
 }
+
+    

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MoreHorizontal, Search, X } from "lucide-react";
+import { MoreHorizontal, Search, X, CreditCard, DollarSign } from "lucide-react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { format, startOfDay, endOfDay } from 'date-fns';
@@ -160,7 +160,15 @@ export default function SalesLog() {
                   <TableCell>{isClient ? format(new Date(sale.timestamp), 'PPpp') : ""}</TableCell>
                   <TableCell>{sale.customerName}</TableCell>
                   <TableCell>{getEmployeeName(sale.employeeId)}</TableCell>
-                  <TableCell>{sale.payment}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                        {sale.payments.map((p, i) => 
+                            p.method === 'Card' 
+                            ? <CreditCard key={i} className="h-4 w-4 text-muted-foreground" /> 
+                            : <DollarSign key={i} className="h-4 w-4 text-muted-foreground" />
+                        )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={sale.status === 'Completed' ? 'default' : sale.status.includes('Refunded') ? 'destructive' : 'secondary'}>
                       {sale.status}

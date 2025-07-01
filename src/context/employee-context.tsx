@@ -6,6 +6,7 @@ import type { Employee, Role, Permission, EmployeeFormValues, RoleFormValues } f
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from './business-context';
+import { useAudit } from './audit-context';
 
 interface EmployeeContextType {
   employees: Employee[];
@@ -28,6 +29,7 @@ const EmployeeContext = createContext<EmployeeContextType | undefined>(undefined
 export function EmployeeProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { selectedBusiness } = useBusiness();
+  const { logAction } = useAudit();
   const [allEmployees, setAllEmployees] = useState<Record<string, Employee[]>>(mockDb.employees);
   const [allRoles, setAllRoles] = useState<Record<string, Role[]>>(mockDb.roles);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
@@ -56,8 +58,9 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         ...prev,
         [businessId]: [...(prev[businessId] || []), newEmployee]
     }));
+    logAction(businessId, currentEmployee, 'employee.create', `Created employee: ${data.name}`);
     toast({ title: "Success", description: "Employee added successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateEmployee = useCallback((businessId: string, updatedEmployee: Employee) => {
     setAllEmployees(prev => ({
@@ -67,8 +70,9 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     if (currentEmployee?.id === updatedEmployee.id) {
         setCurrentEmployee(updatedEmployee);
     }
+    logAction(businessId, currentEmployee, 'employee.update', `Updated employee: ${updatedEmployee.name}`);
     toast({ title: "Success", description: "Employee updated successfully." });
-  }, [currentEmployee, toast]);
+  }, [currentEmployee, toast, logAction]);
 
   const deleteEmployee = useCallback((businessId: string, employeeId: string) => {
     const businessEmployees = allEmployees[businessId] || [];
@@ -88,13 +92,14 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     }
 
     if (employeeToDelete) {
+        logAction(businessId, currentEmployee, 'employee.delete', `Deleted employee: ${employeeToDelete.name}`);
         toast({
             variant: "destructive",
             title: "Employee Deleted",
             description: `"${employeeToDelete.name}" has been removed.`,
         });
     }
-  }, [allEmployees, currentEmployee, toast]);
+  }, [allEmployees, currentEmployee, toast, logAction]);
 
   const addRole = useCallback((businessId: string, data: RoleFormValues) => {
     const newRole: Role = {
@@ -105,16 +110,18 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       ...prev,
       [businessId]: [...(prev[businessId] || []), newRole],
     }));
+    logAction(businessId, currentEmployee, 'role.create', `Created role: ${data.name}`);
     toast({ title: "Success", description: `Role "${data.name}" created.`});
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateRole = useCallback((businessId: string, updatedRole: Role) => {
     setAllRoles(prev => ({
       ...prev,
       [businessId]: (prev[businessId] || []).map(r => r.id === updatedRole.id ? updatedRole : r),
     }));
+    logAction(businessId, currentEmployee, 'role.update', `Updated role: ${updatedRole.name}`);
     toast({ title: "Success", description: `Role "${updatedRole.name}" updated.`});
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const deleteRole = useCallback((businessId: string, roleId: string) => {
     const employeesInRole = (allEmployees[businessId] || []).filter(e => e.roleId === roleId);
@@ -133,13 +140,14 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       [businessId]: (prev[businessId] || []).filter(r => r.id !== roleId),
     }));
     if (roleToDelete) {
+        logAction(businessId, currentEmployee, 'role.delete', `Deleted role: ${roleToDelete.name}`);
       toast({
         variant: 'destructive',
         title: 'Role Deleted',
         description: `Role "${roleToDelete.name}" has been removed.`,
       });
     }
-  }, [allRoles, allEmployees, toast]);
+  }, [allRoles, allEmployees, toast, logAction, currentEmployee]);
 
 
   const permissions = useMemo(() => {
@@ -182,3 +190,5 @@ export function useEmployee() {
   }
   return context;
 }
+
+    

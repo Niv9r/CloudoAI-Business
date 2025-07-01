@@ -6,6 +6,8 @@ import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useAudit } from './audit-context';
+import { useEmployee } from './employee-context';
 
 interface InventoryContextType {
   getProducts: (businessId: string) => Product[];
@@ -62,6 +64,8 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { logAction } = useAudit();
+  const { currentEmployee } = useEmployee();
   const [db, setDb] = useState(mockDb);
 
   const getStatusFromStock = (stock: number): Product['status'] => {
@@ -98,8 +102,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [...(prevDb.products[businessId] || []), newProduct]
         }
     }));
+    logAction(businessId, currentEmployee, 'product.create', `Created product: ${data.name}`);
     toast({ title: "Success", description: "Product added successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateProduct = useCallback((businessId: string, updatedProductData: Product) => {
     setDb(prevDb => ({
@@ -113,8 +118,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             )
         }
     }));
+    logAction(businessId, currentEmployee, 'product.update', `Updated product: ${updatedProductData.name}`);
     toast({ title: "Success", description: "Product updated successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const deleteProduct = useCallback((businessId: string, productId: string) => {
     const productToDelete = (db.products[businessId] || []).find(p => p.id === productId);
@@ -126,13 +132,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         }
     }));
     if (productToDelete) {
+        logAction(businessId, currentEmployee, 'product.delete', `Deleted product: ${productToDelete.name}`);
         toast({
             variant: "destructive",
             title: "Product Deleted",
             description: `"${productToDelete.name}" has been removed from inventory.`,
         });
     }
-  }, [db.products, toast]);
+  }, [db.products, toast, logAction, currentEmployee]);
   
   const addPurchaseOrder = useCallback((businessId: string, data: PurchaseOrderFormValues) => {
     const total = data.lineItems.reduce((acc, item) => acc + (item.quantity * item.unitCost), 0);
@@ -152,8 +159,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [newPO, ...(prevDb.purchaseOrders[businessId] || [])]
         }
     }));
+    logAction(businessId, currentEmployee, 'po.create', `Created draft PO for $${total.toFixed(2)}`);
     toast({ title: "Success", description: "Draft Purchase Order created." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updatePurchaseOrder = useCallback((businessId: string, updatedPO: PurchaseOrder) => {
     const total = updatedPO.lineItems.reduce((acc, item) => acc + (item.quantity * item.unitCost), 0);
@@ -175,8 +183,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.purchaseOrders[businessId] || []).map(po => po.id === poId ? { ...po, status: 'Ordered' } : po)
         }
     }));
+    logAction(businessId, currentEmployee, 'po.issue', `Issued PO: ${poId}`);
     toast({ title: "Purchase Order Issued", description: `PO ${poId} has been marked as Ordered.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const cancelPurchaseOrder = useCallback((businessId: string, poId: string) => {
     setDb(prevDb => ({
@@ -186,8 +195,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.purchaseOrders[businessId] || []).map(po => po.id === poId ? { ...po, status: 'Cancelled' } : po)
         }
     }));
+    logAction(businessId, currentEmployee, 'po.cancel', `Cancelled PO: ${poId}`);
     toast({ variant: 'destructive', title: "Purchase Order Cancelled", description: `PO ${poId} has been cancelled.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
   
   const receiveStock = useCallback((businessId: string, poId: string, receivedItems: { productId: string, quantityReceived: number }[]) => {
     setDb(prevDb => {
@@ -227,8 +237,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         return newDb;
     });
     
+    logAction(businessId, currentEmployee, 'po.receive', `Received stock for PO: ${poId}`);
     toast({ title: "Stock Updated", description: "Inventory has been updated with received items." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const adjustStock = useCallback((businessId: string, data: StockAdjustmentFormValues, employeeId: string) => {
     const productToUpdate = (db.products[businessId] || []).find(p => p.id === data.productId);
@@ -256,11 +267,12 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         return newDb;
     });
 
+    logAction(businessId, currentEmployee, 'stock.adjust', `Adjusted stock for ${productToUpdate.name} by ${data.quantity}`);
     toast({
         title: "Stock Adjusted",
         description: `Stock for ${productToUpdate.name} changed by ${data.quantity}. New total: ${newStock}.`
     });
-  }, [db.products, toast]);
+  }, [db.products, toast, logAction, currentEmployee]);
 
   const addSale = useCallback((businessId: string, saleData: Omit<Sale, 'id' | 'employeeId'>, employeeId: string) => {
     const newSale: Sale = {
@@ -275,8 +287,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [newSale, ...(prevDb.sales[businessId] || [])]
         }
     }));
+    logAction(businessId, currentEmployee, 'sale.process', `Processed sale for $${newSale.total.toFixed(2)}`);
     return newSale;
-  }, []);
+  }, [logAction, currentEmployee]);
 
   const processRefund = useCallback((businessId: string, saleId: string, itemsToRefund: { productId: string; quantity: number }[], restockItems: boolean) => {
     setDb(prevDb => {
@@ -309,8 +322,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             return li;
         });
         
-        // This is a simplified tax refund calculation. 
-        // A real system would need to handle tax rules more carefully.
         const effectiveSubtotal = saleToUpdate.subtotal - saleToUpdate.discount;
         const taxRate = effectiveSubtotal > 0 ? saleToUpdate.tax / effectiveSubtotal : 0;
         const totalRefundAmount = refundSubtotal * (1 + taxRate);
@@ -328,7 +339,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
         newDb.sales[businessId] = businessSales.map((s: Sale) => s.id === saleId ? updatedSale : s);
 
-        // Update product stock only if specified
         if (restockItems) {
             const businessProducts = newDb.products[businessId] || [];
             newDb.products[businessId] = businessProducts.map((prod: Product) => {
@@ -344,12 +354,13 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
                 return prod;
             });
         }
-
+        
+        logAction(businessId, currentEmployee, 'sale.refund', `Processed refund of $${totalRefundAmount.toFixed(2)} for sale ${saleId}`);
         return newDb;
     });
 
     toast({ title: "Refund Processed", description: `The refund has been successfully processed${restockItems ? ' and inventory has been updated' : ''}.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const getStatusFromDueDate = (dueDate: Date): Expense['status'] => {
       if (new Date(dueDate) < new Date()) return 'Overdue';
@@ -376,8 +387,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [newExpense, ...(prevDb.expenses[businessId] || [])]
         }
     }));
+    logAction(businessId, currentEmployee, 'expense.create', `Created expense for $${total.toFixed(2)}`);
     toast({ title: "Success", description: "Expense added successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateExpense = useCallback((businessId: string, updatedExpenseData: Expense) => {
     const total = updatedExpenseData.lineItems.reduce((acc, item) => acc + item.amount, 0);
@@ -405,8 +417,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             expenses: { ...prevDb.expenses, [businessId]: updatedExpenses }
         };
     });
+    logAction(businessId, currentEmployee, 'expense.update', `Updated expense ${updatedExpenseData.id}`);
     toast({ title: "Success", description: "Expense updated successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const deleteExpense = useCallback((businessId: string, expenseId: string) => {
     const expenseToDelete = (db.expenses[businessId] || []).find(e => e.id === expenseId);
@@ -418,13 +431,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         }
     }));
     if (expenseToDelete) {
+        logAction(businessId, currentEmployee, 'expense.delete', `Deleted expense ${expenseId} for $${expenseToDelete.total.toFixed(2)}`);
         toast({
             variant: "destructive",
             title: "Expense Deleted",
             description: `Expense record has been removed.`,
         });
     }
-  }, [db.expenses, toast]);
+  }, [db.expenses, toast, logAction, currentEmployee]);
 
   const markExpenseAsPaid = useCallback((businessId: string, expenseId: string) => {
     setDb(prevDb => ({
@@ -434,8 +448,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.expenses[businessId] || []).map(e => e.id === expenseId ? { ...e, status: 'Paid' } : e)
         }
     }));
+    logAction(businessId, currentEmployee, 'expense.paid', `Marked expense ${expenseId} as paid`);
     toast({ title: "Status Updated", description: "Expense marked as paid." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
   
   const addShift = useCallback((businessId: string, startingFloat: number, employeeId: string) => {
     const newShift: Shift = {
@@ -462,8 +477,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
         if (!shiftToUpdate) return prevDb;
 
-        const cashSales = salesThisShift.reduce((acc, sale) => (sale.payment === 'Cash' ? acc + sale.total : acc), 0);
-        const cardSales = salesThisShift.reduce((acc, sale) => (sale.payment === 'Card' || sale.payment === 'Split' ? acc + sale.total : acc), 0);
+        const cashSales = salesThisShift.flatMap(s => s.payments).reduce((acc, p) => p.method === 'Cash' ? acc + p.amount : acc, 0);
+        const cardSales = salesThisShift.flatMap(s => s.payments).reduce((acc, p) => p.method === 'Card' ? acc + p.amount : acc, 0);
         const totalSales = cashSales + cardSales;
         const expectedDrawer = shiftToUpdate.startingCashFloat + cashSales;
         const discrepancy = actualCash - expectedDrawer;
@@ -481,9 +496,10 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         };
         
         const updatedShifts = businessShifts.map(s => s.id === shiftId ? updatedShift : s);
+        logAction(businessId, currentEmployee, 'shift.end', `Ended shift ${shiftId} with discrepancy $${discrepancy.toFixed(2)}`);
         return { ...prevDb, shifts: { ...prevDb.shifts, [businessId]: updatedShifts }};
     });
-  }, []);
+  }, [logAction, currentEmployee]);
 
   const addVendor = useCallback((businessId: string, data: VendorFormValues) => {
     const newVendor: Vendor = {
@@ -497,8 +513,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [...(prevDb.vendors[businessId] || []), newVendor]
         }
     }));
+    logAction(businessId, currentEmployee, 'vendor.create', `Created vendor: ${data.name}`);
     toast({ title: "Success", description: "Vendor added successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateVendor = useCallback((businessId: string, updatedVendor: Vendor) => {
       setDb(prevDb => ({
@@ -508,8 +525,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
               [businessId]: (prevDb.vendors[businessId] || []).map(v => v.id === updatedVendor.id ? updatedVendor : v)
           }
       }));
+      logAction(businessId, currentEmployee, 'vendor.update', `Updated vendor: ${updatedVendor.name}`);
       toast({ title: "Success", description: "Vendor updated successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const deleteVendor = useCallback((businessId: string, vendorId: string) => {
       const vendorToDelete = (db.vendors[businessId] || []).find(v => v.id === vendorId);
@@ -521,13 +539,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           }
       }));
       if (vendorToDelete) {
+          logAction(businessId, currentEmployee, 'vendor.delete', `Deleted vendor: ${vendorToDelete.name}`);
           toast({
               variant: "destructive",
               title: "Vendor Deleted",
               description: `"${vendorToDelete.name}" has been removed.`,
           });
       }
-  }, [db.vendors, toast]);
+  }, [db.vendors, toast, logAction, currentEmployee]);
   
   // Wholesale Order Management
   const addWholesaleOrder = useCallback((businessId: string, data: WholesaleOrderFormValues) => {
@@ -549,8 +568,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [newOrder, ...(prevDb.wholesaleOrders[businessId] || [])]
         }
     }));
+    logAction(businessId, currentEmployee, 'wholesale.create', `Created draft WO-${newOrder.id} for $${total.toFixed(2)}`);
     toast({ title: "Success", description: "Draft Wholesale Order created." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const updateWholesaleOrder = useCallback((businessId: string, updatedOrder: WholesaleOrder) => {
     const subtotal = updatedOrder.lineItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
@@ -573,8 +593,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Awaiting Payment' } : o)
         }
     }));
+    logAction(businessId, currentEmployee, 'wholesale.confirm', `Confirmed order ${orderId}`);
     toast({ title: "Order Confirmed", description: `Order ${orderId} is now awaiting payment.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const markWholesaleOrderPaid = useCallback((businessId: string, orderId: string) => {
     setDb(prevDb => ({
@@ -584,8 +605,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Awaiting Fulfillment' } : o)
         }
     }));
+    logAction(businessId, currentEmployee, 'wholesale.paid', `Marked order ${orderId} as paid`);
     toast({ title: "Payment Received", description: `Order ${orderId} is now awaiting fulfillment.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const cancelWholesaleOrder = useCallback((businessId: string, orderId: string) => {
     setDb(prevDb => ({
@@ -595,14 +617,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.wholesaleOrders[businessId] || []).map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o)
         }
     }));
+    logAction(businessId, currentEmployee, 'wholesale.cancel', `Cancelled order ${orderId}`);
     toast({ variant: 'destructive', title: "Order Cancelled", description: `Wholesale Order ${orderId} has been cancelled.` });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const shipWholesaleOrder = useCallback((businessId: string, orderId: string, shippedItems: { productId: string; quantityShipped: number }[]) => {
     setDb(prevDb => {
         const newDb = {...prevDb};
         
-        // Update Order
         const orderToUpdate = (newDb.wholesaleOrders[businessId] || []).find(o => o.id === orderId);
         if (orderToUpdate) {
             const updatedLineItems = orderToUpdate.lineItems.map((li: WholesaleOrderLineItem) => {
@@ -615,12 +637,11 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             const updatedOrder: WholesaleOrder = {
                 ...orderToUpdate,
                 lineItems: updatedLineItems,
-                status: isFullyShipped ? 'Completed' : 'Shipped' // Could also be 'Partially Shipped'
+                status: isFullyShipped ? 'Completed' : 'Shipped'
             };
             newDb.wholesaleOrders[businessId] = (newDb.wholesaleOrders[businessId] || []).map((o: WholesaleOrder) => o.id === orderId ? updatedOrder : o);
         }
 
-        // Update Product Stock
         const businessProducts = newDb.products[businessId] || [];
         newDb.products[businessId] = businessProducts.map((prod: Product) => {
             const shippedItem = shippedItems.find(si => si.productId === prod.id);
@@ -635,11 +656,12 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             return prod;
         });
         
+        logAction(businessId, currentEmployee, 'wholesale.ship', `Shipped items for order ${orderId}`);
         return newDb;
     });
     
     toast({ title: "Items Shipped", description: "Inventory has been updated and order status changed." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
 
   const addDiscountCode = useCallback((businessId: string, data: DiscountCodeFormValues) => {
     const newDiscount: DiscountCode = {
@@ -654,8 +676,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: [...(prevDb.discounts[businessId] || []), newDiscount]
         }
     }));
+    logAction(businessId, currentEmployee, 'discount.create', `Created discount code: ${data.code}`);
     toast({ title: "Success", description: "Discount code added successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
   
   const updateDiscountCode = useCallback((businessId: string, updatedDiscount: DiscountCode) => {
     setDb(prevDb => ({
@@ -665,8 +688,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             [businessId]: (prevDb.discounts[businessId] || []).map(d => d.id === updatedDiscount.id ? {...updatedDiscount, code: updatedDiscount.code.toUpperCase()} : d)
         }
     }));
+    logAction(businessId, currentEmployee, 'discount.update', `Updated discount code: ${updatedDiscount.code}`);
     toast({ title: "Success", description: "Discount code updated successfully." });
-  }, [toast]);
+  }, [toast, logAction, currentEmployee]);
   
   const deleteDiscountCode = useCallback((businessId: string, discountId: string) => {
     const discountToDelete = (db.discounts[businessId] || []).find(d => d.id === discountId);
@@ -678,13 +702,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         }
     }));
     if (discountToDelete) {
+        logAction(businessId, currentEmployee, 'discount.delete', `Deleted discount code: ${discountToDelete.code}`);
         toast({
             variant: "destructive",
             title: "Discount Deleted",
             description: `Code "${discountToDelete.code}" has been removed.`,
         });
     }
-  }, [db.discounts, toast]);
+  }, [db.discounts, toast, logAction, currentEmployee]);
 
 
   const value = useMemo(() => ({
@@ -728,7 +753,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     updateDiscountCode,
     deleteDiscountCode,
   }), [
-    db, // Add db to dependencies to reflect state changes
+    db, 
     getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts, getWholesaleOrders, getDiscountCodes, getDiscountByCode,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
     addSale, processRefund, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
@@ -751,3 +776,5 @@ export function useInventory() {
   }
   return context;
 }
+
+    
