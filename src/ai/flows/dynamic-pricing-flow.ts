@@ -26,25 +26,52 @@ const googleSearchTool = ai.defineTool(
     ),
   },
   async (input) => {
-    // NOTE: This is a MOCK search tool for demonstration. In a real application,
-    // you would replace this with a call to a real search API (e.g., Google Custom Search API, SerpAPI).
-    console.log(`[Mock Google Search] Searching for: ${input.query}`);
-    
-    // This mock data simulates finding direct product links.
-    if (input.query.toLowerCase().includes('leather wallet')) {
+    const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
+    const searchEngineId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+
+    if (!apiKey || !searchEngineId || apiKey === 'YOUR_API_KEY_HERE' || searchEngineId === 'YOUR_SEARCH_ENGINE_ID_HERE') {
+      console.warn('[Google Search Tool] API key or Search Engine ID is not configured. Please set them in your .env file. Falling back to mock data.');
+      // Fallback to mock data if API keys are not set
+      if (input.query.toLowerCase().includes('leather wallet')) {
+        return [
+          { title: 'Handmade Bifold Leather Wallet | The Leather Store UK', link: 'https://www.leatherstore.co.uk/products/handmade-bifold-wallet', snippet: 'Handmade real leather wallets. Our classic bifold is priced at £39.99. Free UK delivery.' },
+          { title: 'Billfold Wallet with 8 Credit Card Slots | Aspinal of London', link: 'https://www.aspinaloflondon.com/products/billfold-wallet-with-8-credit-card-slots-smooth-black', snippet: 'Discover our luxury collection of men\'s leather wallets. This billfold wallet is £95.' },
+          { title: 'John Lewis ANYDAY Leather Billfold Wallet, Brown', link: 'https://www.johnlewis.com/john-lewis-anyday-leather-billfold-wallet-brown/p5610810', snippet: 'Shop for leather wallets at John Lewis & Partners. Simple and durable, priced at £35.' },
+          { title: 'Fossil Men\'s Derrick Leather Bifold Wallet', link: 'https://www.fossil.com/en-gb/products/derrick-rfid-bifold/ML3681200.html', snippet: 'Our top selling men\'s leather wallet from Fossil. The Derrick bifold is £55.' },
+          { title: 'M&S Collection Leather Billfold Wallet | M&S', link: 'https://www.marksandspencer.com/collection-leather-billfold-wallet/p/flp60585698', snippet: 'A stylish and practical leather wallet for men. Price: £22.50.' },
+        ];
+      }
       return [
-        { title: 'Handmade Bifold Leather Wallet | The Leather Store UK', link: 'https://www.leatherstore.co.uk/products/handmade-bifold-wallet', snippet: 'Handmade real leather wallets. Our classic bifold is priced at £39.99. Free UK delivery.' },
-        { title: 'Billfold Wallet with 8 Credit Card Slots | Aspinal of London', link: 'https://www.aspinaloflondon.com/products/billfold-wallet-with-8-credit-card-slots-smooth-black', snippet: 'Discover our luxury collection of men\'s leather wallets. This billfold wallet is £95.' },
-        { title: 'John Lewis ANYDAY Leather Billfold Wallet, Brown', link: 'https://www.johnlewis.com/john-lewis-anyday-leather-billfold-wallet-brown/p5610810', snippet: 'Shop for leather wallets at John Lewis & Partners. Simple and durable, priced at £35.' },
-        { title: 'Fossil Men\'s Derrick Leather Bifold Wallet', link: 'https://www.fossil.com/en-gb/products/derrick-rfid-bifold/ML3681200.html', snippet: 'Our top selling men\'s leather wallet from Fossil. The Derrick bifold is £55.' },
-        { title: 'M&S Collection Leather Billfold Wallet | M&S', link: 'https://www.marksandspencer.com/collection-leather-billfold-wallet/p/flp60585698', snippet: 'A stylish and practical leather wallet for men. Price: £22.50.' },
+         { title: 'Example Competitor Site - Product A', link: 'https://www.competitor.co.uk/products/product-a', snippet: 'A similar product with a competitive price of £14.99. Check for details.' },
+         { title: 'Another UK Retailer - Product B', link: 'https://www.another-site.co.uk/items/product-b-plus', snippet: 'Get this product for just £16.50 with next day delivery.' }
       ];
     }
-    // Generic fallback for other products
-    return [
-       { title: 'Example Competitor Site - Product A', link: 'https://www.competitor.co.uk/products/product-a', snippet: 'A similar product with a competitive price of £14.99. Check for details.' },
-       { title: 'Another UK Retailer - Product B', link: 'https://www.another-site.co.uk/items/product-b-plus', snippet: 'Get this product for just £16.50 with next day delivery.' }
-    ];
+    
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(input.query)}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Google Search API responded with status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      if (!data.items) {
+        return [];
+      }
+
+      // Map the API response to our output schema
+      return data.items.slice(0, 5).map((item: any) => ({ // limit to 5 results
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet,
+      }));
+    } catch (error) {
+      console.error('Error calling Google Custom Search API:', error);
+      // Return an empty array or throw an error to let the AI know the tool failed.
+      // For robustness, returning an empty array is often safer.
+      return [];
+    }
   }
 );
 
