@@ -23,13 +23,19 @@ export default function RecentSales() {
   
   const salesData = useMemo(() => {
     const sales = getSales(selectedBusiness.id);
-    return sales.slice(0, 5).map(sale => ({
-      name: sale.customerName,
-      email: `${sale.customerName.split(' ').join('.').toLowerCase()}@email.com`,
-      amount: `+$${sale.total.toFixed(2)}`,
-      avatarSrc: 'https://placehold.co/100x100.png',
-      fallback: sale.customerName.split(' ').map(n => n[0]).join('')
-    }));
+    return sales.slice(0, 5).map(sale => {
+      const name = sale.customerName || 'Guest';
+      const fallback = name.split(' ').map(n => n[0]).join('').toUpperCase() || 'G';
+      const email = `${name.split(' ').join('.').toLowerCase()}@email.com`;
+      
+      return {
+        name,
+        email,
+        amount: `+$${sale.total.toFixed(2)}`,
+        avatarSrc: 'https://placehold.co/100x100.png',
+        fallback,
+      };
+    });
   }, [selectedBusiness.id, getSales]);
 
   return (
