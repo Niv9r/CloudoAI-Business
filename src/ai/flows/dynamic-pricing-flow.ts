@@ -13,35 +13,37 @@ import { z } from 'genkit';
 const googleSearchTool = ai.defineTool(
   {
     name: 'googleSearchTool',
-    description: 'Performs a Google search for a given query and returns the top results.',
+    description: 'Performs a Google search for a given query and returns the top results. The results contain direct links to product pages.',
     inputSchema: z.object({
       query: z.string().describe('The search query, e.g., "Classic Leather Wallet price uk".'),
     }),
     outputSchema: z.array(
       z.object({
         title: z.string().describe('The title of the search result.'),
-        link: z.string().describe('The URL of the search result.'),
+        link: z.string().url().describe('The direct URL of the search result product page.'),
         snippet: z.string().describe('A snippet of the content from the search result.'),
       })
     ),
   },
   async (input) => {
-    // In a real application, this would call a Google Search API.
-    // For this prototype, we'll return mock data based on the query.
+    // NOTE: This is a MOCK search tool for demonstration. In a real application,
+    // you would replace this with a call to a real search API (e.g., Google Custom Search API, SerpAPI).
     console.log(`[Mock Google Search] Searching for: ${input.query}`);
+    
+    // This mock data simulates finding direct product links.
     if (input.query.toLowerCase().includes('leather wallet')) {
       return [
-        { title: 'The Leather Store UK - Mens Wallets', link: 'https://www.leatherstore.co.uk/wallets', snippet: 'Handmade real leather wallets. Prices from £39.99. Free UK delivery.' },
-        { title: 'Aspinal of London | Mens Leather Wallets', link: 'https://www.aspinaloflondon.com/mens-collection/mens-wallets', snippet: 'Discover our luxury collection of men\'s leather wallets. Billfold wallets from £95.' },
-        { title: 'John Lewis - Leather Wallets', link: 'https://www.johnlewis.com/men/mens-accessories/wallets', snippet: 'Shop for leather wallets at John Lewis & Partners. Prices range from £35 to £150.' },
-        { title: 'Fossil UK - Men\'s Wallets', link: 'https://www.fossil.com/en-gb/men/wallets/', snippet: 'Men\'s leather wallets from Fossil. Our top selling wallets are around £55.' },
-        { title: 'Marks & Spencer - Wallets', link: 'https://www.marksandspencer.com/l/men/accessories/wallets', snippet: 'Stylish and practical leather wallets for men. Prices start at just £22.50.' },
+        { title: 'Handmade Bifold Leather Wallet | The Leather Store UK', link: 'https://www.leatherstore.co.uk/products/handmade-bifold-wallet', snippet: 'Handmade real leather wallets. Our classic bifold is priced at £39.99. Free UK delivery.' },
+        { title: 'Billfold Wallet with 8 Credit Card Slots | Aspinal of London', link: 'https://www.aspinaloflondon.com/products/billfold-wallet-with-8-credit-card-slots-smooth-black', snippet: 'Discover our luxury collection of men\'s leather wallets. This billfold wallet is £95.' },
+        { title: 'John Lewis ANYDAY Leather Billfold Wallet, Brown', link: 'https://www.johnlewis.com/john-lewis-anyday-leather-billfold-wallet-brown/p5610810', snippet: 'Shop for leather wallets at John Lewis & Partners. Simple and durable, priced at £35.' },
+        { title: 'Fossil Men\'s Derrick Leather Bifold Wallet', link: 'https://www.fossil.com/en-gb/products/derrick-rfid-bifold/ML3681200.html', snippet: 'Our top selling men\'s leather wallet from Fossil. The Derrick bifold is £55.' },
+        { title: 'M&S Collection Leather Billfold Wallet | M&S', link: 'https://www.marksandspencer.com/collection-leather-billfold-wallet/p/flp60585698', snippet: 'A stylish and practical leather wallet for men. Price: £22.50.' },
       ];
     }
     // Generic fallback for other products
     return [
-       { title: 'Example Competitor Site', link: 'https://www.competitor.co.uk/productA', snippet: 'A similar product with a competitive price of £14.99. Check for details.' },
-       { title: 'Another UK Retailer', link: 'https://www.another-site.co.uk/productB', snippet: 'Get this product for just £16.50 with next day delivery.' }
+       { title: 'Example Competitor Site - Product A', link: 'https://www.competitor.co.uk/products/product-a', snippet: 'A similar product with a competitive price of £14.99. Check for details.' },
+       { title: 'Another UK Retailer - Product B', link: 'https://www.another-site.co.uk/items/product-b-plus', snippet: 'Get this product for just £16.50 with next day delivery.' }
     ];
   }
 );
@@ -60,7 +62,7 @@ const MarketResearchOutputSchema = z.object({
     z.object({
       productName: z.string().describe("The name of the competitor's product or the name of the retail store."),
       price: z.number().describe("The price of the competitor's product, extracted as a number."),
-      url: z.string().url().describe("The direct URL to the competitor's product page."),
+      url: z.string().url().describe("The direct URL to the competitor's product page, as returned by the search tool."),
     })
   ).describe('A comprehensive list of all relevant products found during the market research.'),
 });
@@ -81,7 +83,7 @@ const marketResearchFlow = ai.defineFlow(
         input: { schema: MarketResearchInputSchema },
         output: { schema: MarketResearchOutputSchema },
         tools: [googleSearchTool],
-        prompt: `You are a Market Research Analyst for a UK-based retail business. Your task is to perform a comprehensive market analysis for a given product and present your findings.
+        prompt: `You are a Market Research Analyst for a UK-based retail business. Your task is to perform a comprehensive market analysis for a given product and present your findings. You **must** ground all of your analysis in the real-time data provided by the googleSearchTool. Do not invent information.
 
 Product to analyze:
 - Name: {{{productName}}}
@@ -91,8 +93,9 @@ Product to analyze:
 Instructions:
 1.  Use the googleSearchTool to search for the same or very similar products available for sale in the UK. Use multiple search queries like "{{{productName}}} price uk", "buy {{{productCategory}}} uk", and similar variations to gather broad data.
 2.  Analyze all search results to identify as many relevant competitors and their prices as possible. Extract the price as a number from the search result snippet or title.
-3.  Provide a concise 'marketSummary' in markdown. This summary should synthesize your findings, mentioning the general price range you discovered, any noticeable market tiers (e.g., budget, mid-range, premium), and how our current price fits into this landscape.
-4.  Compile a comprehensive 'marketAnalysis' list of all the competitor products you found. For each, include the product/store name, its price, and the direct URL from the search result. Ensure the URL is a direct link to the product if possible.
+3.  For the 'marketAnalysis' list, you MUST use the exact 'link' provided by the tool for the 'url' field. Do not create or hallucinate URLs.
+4.  Provide a concise 'marketSummary' in markdown. This summary should synthesize your findings, mentioning the general price range you discovered and how our current price fits into this landscape. Base this summary **only** on the information returned by the tool.
+5.  Compile a comprehensive 'marketAnalysis' list of all the competitor products you found. For each, include the product/store name, its price, and the direct URL from the search result.
 `,
     });
     
