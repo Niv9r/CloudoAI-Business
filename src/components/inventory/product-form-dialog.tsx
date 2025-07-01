@@ -22,6 +22,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { productFormSchema, type ProductFormValues, type Product } from '@/lib/types';
+import { Separator } from '../ui/separator';
+import DynamicPricingAssistant from './dynamic-pricing-assistant';
 
 interface ProductFormDialogProps {
   isOpen: boolean;
@@ -71,7 +73,7 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           <DialogDescription>
@@ -160,6 +162,14 @@ export default function ProductFormDialog({ isOpen, onOpenChange, onSave, produc
                     )}
                 />
             </div>
+            
+            {isEditMode && product && (
+                <>
+                    <Separator />
+                    <DynamicPricingAssistant product={product} />
+                </>
+            )}
+
             <DialogFooter className='pt-4'>
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
                 <Button type="submit">
