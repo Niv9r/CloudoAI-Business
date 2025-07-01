@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -23,11 +24,11 @@ export default function RecentSales() {
   const salesData = useMemo(() => {
     const sales = getSales(selectedBusiness.id);
     return sales.slice(0, 5).map(sale => ({
-      name: sale.customer,
-      email: `${sale.customer.split(' ').join('.').toLowerCase()}@email.com`,
+      name: sale.customerName,
+      email: `${sale.customerName.split(' ').join('.').toLowerCase()}@email.com`,
       amount: `+$${sale.total.toFixed(2)}`,
       avatarSrc: 'https://placehold.co/100x100.png',
-      fallback: sale.customer.split(' ').map(n => n[0]).join('')
+      fallback: sale.customerName.split(' ').map(n => n[0]).join('')
     }));
   }, [selectedBusiness.id, getSales]);
 

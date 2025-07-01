@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle2, CreditCard, DollarSign, Loader2 } from 'lucide-react';
+import { useInventory } from '@/context/inventory-context';
 
 interface ChargeDialogProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ type PaymentMethod = 'Card' | 'Cash';
 
 export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, discount, onSaleComplete }: ChargeDialogProps) {
   const { toast } = useToast();
+  const { getProducts } = useInventory(); // To get latest product cost
   const [step, setStep] = useState<PaymentStep>('payment');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Card');
   const [tenderedAmount, setTenderedAmount] = useState('');
@@ -101,20 +103,24 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, dis
     // Construct the sale object
     const newSaleData: Omit<Sale, 'id' | 'employeeId'> = {
         timestamp: new Date().toISOString(),
-        customer: customer ? `${customer.firstName} ${customer.lastName}` : 'Guest',
+        customerId: customer?.id || null,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Guest',
         subtotal: subtotal,
         discount: discountAmount,
         tax: taxAmount,
         total: total,
         payment: paymentMethod,
         status: 'Completed',
-        lineItems: cart.map(item => ({
-            productId: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.price,
-            subtotal: item.price * item.quantity
-        }))
+        lineItems: cart.map(item => {
+            return {
+                productId: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                subtotal: item.price * item.quantity,
+                costAtTimeOfSale: item.cost, // Use cost from the cart item
+            };
+        })
     };
 
     onSaleComplete(newSaleData);
@@ -227,3 +233,5 @@ export default function ChargeDialog({ isOpen, onOpenChange, cart, customer, dis
     </Dialog>
   );
 }
+
+    

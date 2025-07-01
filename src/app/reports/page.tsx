@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +12,8 @@ import TopSellingProductsReport from '@/components/reports/top-selling-products-
 import ExpenseBreakdownReport from '@/components/reports/expense-breakdown-report';
 import PaymentMethodsReport from '@/components/reports/payment-methods-report';
 import InventoryStatusReport from '@/components/reports/inventory-status-report';
+import PnlReport from '@/components/reports/pnl-report';
+import EmployeeSalesReport from '@/components/reports/employee-sales-report';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -257,10 +260,11 @@ export default function ReportsPage() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 flex-1">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="sales">Sales Reports</TabsTrigger>
-                    <TabsTrigger value="inventory">Inventory Reports</TabsTrigger>
-                    <TabsTrigger value="expenses">Expense Reports</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="sales">Sales</TabsTrigger>
+                    <TabsTrigger value="inventory">Inventory</TabsTrigger>
+                    <TabsTrigger value="expenses">Expenses</TabsTrigger>
+                    <TabsTrigger value="financials">Financials</TabsTrigger>
                 </TabsList>
                  <TabsContent value="sales" className="space-y-8 mt-4">
                     <SalesSummaryReport key={`${selectedBusiness.id}-sales-summary`} dateRange={date} />
@@ -268,6 +272,7 @@ export default function ReportsPage() {
                         <TopSellingProductsReport key={`${selectedBusiness.id}-top-products`} dateRange={date} />
                         <PaymentMethodsReport key={`${selectedBusiness.id}-payments`} dateRange={date} />
                     </div>
+                     <EmployeeSalesReport key={`${selectedBusiness.id}-employee-sales`} dateRange={date} />
                 </TabsContent>
                 <TabsContent value="inventory" className="space-y-8 mt-4">
                     <InventoryValuationReport key={`${selectedBusiness.id}-inv-valuation`} />
@@ -276,7 +281,12 @@ export default function ReportsPage() {
                 <TabsContent value="expenses" className="space-y-8 mt-4">
                     <ExpenseBreakdownReport key={`${selectedBusiness.id}-expenses`} dateRange={date} />
                 </TabsContent>
+                <TabsContent value="financials" className="space-y-8 mt-4">
+                    <PnlReport key={`${selectedBusiness.id}-pnl`} dateRange={date} />
+                </TabsContent>
             </Tabs>
         </div>
     );
 }
+
+    

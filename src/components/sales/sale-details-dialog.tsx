@@ -79,7 +79,7 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <h4 className="font-semibold">Customer</h4>
-              <p className="text-sm text-muted-foreground">{sale.customer}</p>
+              <p className="text-sm text-muted-foreground">{sale.customerName}</p>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold">Employee</h4>
@@ -178,3 +178,5 @@ export default function SaleDetailsDialog({ isOpen, onOpenChange, sale, onProces
     </>
   );
 }
+
+    

@@ -11,7 +11,7 @@ export type Business = {
     timezone: string;
 };
 
-// New Types for Employee & Role Management
+// --- Employee & Role Management ---
 
 export const PERMISSIONS = [
     'access_settings',
@@ -22,7 +22,8 @@ export const PERMISSIONS = [
     'process_refunds',
     'manage_expenses',
     'manage_purchase_orders',
-    'manage_wholesale_orders'
+    'manage_wholesale_orders',
+    'manage_discounts'
 ] as const;
 export type Permission = typeof PERMISSIONS[number];
 
@@ -48,9 +49,7 @@ export type Employee = EmployeeFormValues & {
     id: string;
 };
 
-
-// --- End of New Types ---
-
+// --- Product & Inventory ---
 
 export const productFormSchema = z.object({
   name: z.string().min(3, { message: 'Product name must be at least 3 characters.' }),
@@ -68,26 +67,25 @@ export type Product = ProductFormValues & {
     status: "In Stock" | "Out of Stock" | "Low Stock";
 };
 
+// --- POS & Sales ---
+
 export type CartItem = Product & {
     quantity: number;
 };
 
-export const customerFormSchema = z.object({
-    type: z.enum(['individual', 'company']),
-    firstName: z.string().min(1, 'First name is required.'),
-    lastName: z.string().min(1, 'Last name is required.'),
-    companyName: z.string().optional().nullable(),
-    email: z.string().email('Invalid email address.'),
-    phone: z.string().min(1, 'Phone number is required.'),
-    loyaltyPoints: z.coerce.number().int().optional(),
+export const discountCodeSchema = z.object({
+  code: z.string().min(3, 'Code must be at least 3 characters.').regex(/^[A-Z0-9]+$/, 'Code can only contain uppercase letters and numbers.'),
+  type: z.enum(['percentage', 'fixed']),
+  value: z.coerce.number().min(0.01, 'Value must be greater than zero.'),
+  isActive: z.boolean().default(true),
 });
-export type CustomerFormValues = z.infer<typeof customerFormSchema>;
-
-export type Customer = CustomerFormValues & {
-    id:string;
+export type DiscountCodeFormValues = z.infer<typeof discountCodeSchema>;
+export type DiscountCode = DiscountCodeFormValues & {
+    id: string;
 };
 
 export type Discount = {
+    code?: string;
     type: 'percentage' | 'fixed';
     value: number;
 };
@@ -106,6 +104,7 @@ export type SaleLineItem = {
   name: string;
   quantity: number;
   unitPrice: number;
+  costAtTimeOfSale: number;
   subtotal: number;
   refundedQuantity?: number;
 };
@@ -113,7 +112,8 @@ export type SaleLineItem = {
 export type Sale = {
   id: string;
   timestamp: string;
-  customer: string;
+  customerId: string | null;
+  customerName: string;
   employeeId: string;
   total: number;
   status: "Completed" | "Refunded" | "Partially Refunded";
@@ -134,12 +134,30 @@ export type Shift = {
     endingCashFloat?: number;
     status: 'open' | 'closed' | 'reconciled';
     notes?: string;
-    // For historical/reconciled shifts
     cashSales?: number;
     cardSales?: number;
     totalSales?: number;
     discrepancy?: number;
 };
+
+// --- Customer Management ---
+
+export const customerFormSchema = z.object({
+    type: z.enum(['individual', 'company']),
+    firstName: z.string().min(1, 'First name is required.'),
+    lastName: z.string().min(1, 'Last name is required.'),
+    companyName: z.string().optional().nullable(),
+    email: z.string().email('Invalid email address.'),
+    phone: z.string().min(1, 'Phone number is required.'),
+    loyaltyPoints: z.coerce.number().int().optional(),
+});
+export type CustomerFormValues = z.infer<typeof customerFormSchema>;
+
+export type Customer = CustomerFormValues & {
+    id:string;
+};
+
+// --- Vendor & Expenses ---
 
 export type Vendor = {
   id: string;
@@ -192,6 +210,8 @@ export type Expense = {
   notes?: string;
 };
 
+// --- Purchasing ---
+
 export const poLineItemSchema = z.object({
   productId: z.string().min(1, 'Product is required.'),
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1.'),
@@ -226,6 +246,8 @@ export type PurchaseOrder = {
     notes?: string;
 };
 
+// --- Stock Adjustments ---
+
 export const stockAdjustmentTypes = ['Stock Count', 'Damage', 'Theft', 'Return', 'Promotion', 'Other'] as const;
 const stockAdjustmentTypeEnum = z.enum(stockAdjustmentTypes);
 export type StockAdjustmentType = z.infer<typeof stockAdjustmentTypeEnum>;
@@ -250,7 +272,7 @@ export type StockAdjustment = {
     employeeId: string; // User who made the adjustment
 };
 
-// Types for B2B/Wholesale Module
+// --- B2B/Wholesale ---
 
 export const paymentTermsTypes = ['Due on receipt', 'Net 15', 'Net 30', 'Net 60'] as const;
 const paymentTermsEnum = z.enum(paymentTermsTypes);
@@ -332,3 +354,5 @@ export type BusinessKnowledgeBase = {
     content: string;
     embedding?: number[]; // Vector embedding for semantic search
 };
+
+    

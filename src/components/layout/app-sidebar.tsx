@@ -30,6 +30,7 @@ import {
   Lightbulb,
   ChevronRight,
   Users,
+  Ticket,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usePathname } from 'next/navigation';
@@ -46,10 +47,11 @@ const navConfig = [
     icon: ShoppingCart,
     permission: 'process_sales',
     subItems: [
-      { href: '/sales', label: 'Sales Log' },
-      { href: '/wholesale', label: 'Wholesale' },
-      { href: '/shifts', label: 'Shifts' },
-      { href: '/customers', label: 'Customers' },
+      { href: '/sales', label: 'Sales Log', permission: 'process_sales' },
+      { href: '/wholesale', label: 'Wholesale', permission: 'manage_wholesale_orders' },
+      { href: '/shifts', label: 'Shifts', permission: 'process_sales' },
+      { href: '/customers', label: 'Customers', permission: 'process_sales' },
+      { href: '/discounts', label: 'Discounts', permission: 'manage_discounts' },
     ],
   },
   {
@@ -58,20 +60,20 @@ const navConfig = [
     icon: Package,
     permission: 'manage_inventory',
     subItems: [
-      { href: '/inventory', label: 'Products' },
-      { href: '/purchase-orders', label: 'Purchase Orders' },
-      { href: '/stock-adjustments', label: 'Stock Adjustments' },
-      { href: '/vendors', label: 'Vendors' },
+      { href: '/inventory', label: 'Products', permission: 'manage_inventory' },
+      { href: '/purchase-orders', label: 'Purchase Orders', permission: 'manage_purchase_orders' },
+      { href: '/stock-adjustments', label: 'Stock Adjustments', permission: 'manage_inventory' },
+      { href: '/vendors', label: 'Vendors', permission: 'manage_inventory' },
     ],
   },
    {
     type: 'group' as const,
     label: 'Finance',
     icon: Landmark,
-    permission: 'manage_expenses',
+    permission: 'manage_expenses', // or a new finance permission
     subItems: [
-      { href: '/expenses', label: 'Expenses' },
-      { href: '/reports', label: 'Reports' },
+      { href: '/expenses', label: 'Expenses', permission: 'manage_expenses' },
+      { href: '/reports', label: 'Reports', permission: 'view_reports' },
     ],
   },
   {
@@ -80,8 +82,8 @@ const navConfig = [
     icon: Users,
     permission: 'access_settings',
     subItems: [
-      { href: '/employees', label: 'Employees' },
-      { href: '/settings', label: 'Business Settings' },
+      { href: '/employees', label: 'Employees', permission: 'manage_employees' },
+      { href: '/settings', label: 'Business Settings', permission: 'access_settings' },
     ],
   }
 ];
@@ -154,7 +156,9 @@ export default function AppSidebar() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                       <SidebarMenuSub>
-                          {item.subItems.map(subItem => (
+                          {item.subItems
+                            .filter(subItem => permissions.has(subItem.permission))
+                            .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
                                   <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
                                     <Link href={subItem.href}>
@@ -193,3 +197,5 @@ export default function AppSidebar() {
     </Sidebar>
   );
 }
+
+    

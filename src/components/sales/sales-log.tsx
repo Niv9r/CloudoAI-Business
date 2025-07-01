@@ -79,7 +79,7 @@ export default function SalesLog() {
       // Search term filter
       const searchMatch = searchTerm.toLowerCase() === '' ||
         sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         getEmployeeName(sale.employeeId).toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
@@ -158,7 +158,7 @@ export default function SalesLog() {
                 <TableRow key={sale.id}>
                   <TableCell className="font-medium">{sale.id}</TableCell>
                   <TableCell>{isClient ? format(new Date(sale.timestamp), 'PPpp') : ""}</TableCell>
-                  <TableCell>{sale.customer}</TableCell>
+                  <TableCell>{sale.customerName}</TableCell>
                   <TableCell>{getEmployeeName(sale.employeeId)}</TableCell>
                   <TableCell>{sale.payment}</TableCell>
                   <TableCell>
@@ -209,3 +209,5 @@ export default function SalesLog() {
     </>
   );
 }
+
+    

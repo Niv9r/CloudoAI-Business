@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { PlusCircle } from 'lucide-react';
 import { useCustomer } from '@/context/customer-context';
 import type { Customer, CustomerFormValues } from '@/lib/types';
 import CustomerFormDialog from '@/components/customers/customer-form-dialog';
+import CustomerHistoryDialog from '@/components/customers/customer-history-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,9 @@ export default function CustomersPage() {
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [customerToView, setCustomerToView] = useState<Customer | null>(null);
 
   const handleSaveCustomer = (data: CustomerFormValues) => {
     if (customerToEdit) {
@@ -62,6 +67,11 @@ export default function CustomersPage() {
     setIsAlertOpen(false);
     setCustomerToDelete(null);
   };
+  
+  const handleOpenHistoryDialog = (customer: Customer) => {
+    setCustomerToView(customer);
+    setIsHistoryOpen(true);
+  }
 
   return (
     <div className="flex h-full w-full flex-col gap-4">
@@ -81,6 +91,7 @@ export default function CustomersPage() {
           customers={customers}
           onEdit={handleOpenEditDialog}
           onDelete={handleOpenDeleteDialog}
+          onViewHistory={handleOpenHistoryDialog}
         />
       </div>
 
@@ -90,6 +101,14 @@ export default function CustomersPage() {
         onSave={handleSaveCustomer}
         customer={customerToEdit}
       />
+      
+      {customerToView && (
+        <CustomerHistoryDialog
+          isOpen={isHistoryOpen}
+          onOpenChange={setIsHistoryOpen}
+          customer={customerToView}
+        />
+      )}
 
       {customerToDelete && (
         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
@@ -115,3 +134,5 @@ export default function CustomersPage() {
     </div>
   );
 }
+
+    

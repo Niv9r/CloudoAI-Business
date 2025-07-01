@@ -1,3 +1,4 @@
+
 'use client';
 
 import KpiCard from "@/components/dashboard/kpi-card";
@@ -6,6 +7,7 @@ import SalesChart from "@/components/dashboard/sales-chart";
 import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
 import AiCopilot from '@/components/dashboard/ai-copilot';
+import AlertsPanel from '@/components/dashboard/alerts-panel';
 import { useBusiness } from '@/context/business-context';
 import { useInventory } from "@/context/inventory-context";
 import { useCustomer } from "@/context/customer-context";
@@ -14,19 +16,22 @@ import { useMemo } from "react";
 
 export default function Home() {
   const { selectedBusiness } = useBusiness();
-  const { getSales, getProducts } = useInventory();
+  const { getSales, getProducts, getExpenses } = useInventory();
   const { getCustomers } = useCustomer();
 
   const sales = useMemo(() => getSales(selectedBusiness.id), [selectedBusiness.id, getSales]);
   const customers = useMemo(() => getCustomers(selectedBusiness.id), [selectedBusiness.id, getCustomers]);
   const products = useMemo(() => getProducts(selectedBusiness.id), [selectedBusiness.id, getProducts]);
+  const expenses = useMemo(() => getExpenses(selectedBusiness.id), [selectedBusiness.id, getExpenses]);
+
 
   const kpis = useMemo(() => {
     const grossRevenue = sales.reduce((acc, sale) => acc + sale.total, 0);
-    const netProfit = sales.reduce((acc, sale) => acc + (sale.total - sale.lineItems.reduce((itemAcc, item) => {
-        const product = products.find(p => p.id === item.productId);
-        return itemAcc + (product ? product.cost * item.quantity : 0);
-    }, 0)), 0);
+    
+    const cogs = sales.flatMap(s => s.lineItems).reduce((acc, item) => acc + (item.costAtTimeOfSale * item.quantity), 0);
+    const totalExpenses = expenses.reduce((acc, exp) => acc + exp.total, 0);
+    const netProfit = grossRevenue - cogs - totalExpenses;
+    
     const salesCount = sales.length;
     const customerCount = customers.length;
     
@@ -37,7 +42,7 @@ export default function Home() {
       { title: "Customer Count", value: `+${customerCount.toLocaleString()}`, change: "+11.4% from last month", icon: <Users className="h-6 w-6 text-primary" /> },
     ];
 
-  }, [sales, customers, products]);
+  }, [sales, customers, products, expenses]);
 
 
   return (
@@ -45,6 +50,10 @@ export default function Home() {
       <div>
         <h1 className="text-3xl font-bold font-headline tracking-tight">{selectedBusiness.name} Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's a summary of your business.</p>
+      </div>
+      
+      <div className="w-full">
+        <AlertsPanel key={selectedBusiness.id} />
       </div>
 
       <div className="w-full">
@@ -77,3 +86,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

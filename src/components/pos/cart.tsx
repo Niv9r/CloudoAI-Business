@@ -1,6 +1,7 @@
+
 'use client';
 
-import type { CartItem, Customer, Discount } from '@/lib/types';
+import type { CartItem, Customer, Discount, DiscountCode } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,9 @@ import { Minus, Plus, Trash2, X, User, Tag, Ticket, UserPlus, Archive } from 'lu
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Label } from '../ui/label';
 import { useMemo, useState } from 'react';
+import { useInventory } from '@/context/inventory-context';
+import { useToast } from '@/hooks/use-toast';
+import { useBusiness } from '@/context/business-context';
 
 interface CartProps {
   cart: CartItem[];
@@ -25,53 +29,48 @@ interface CartProps {
   onHoldSale: () => void;
 }
 
-function DiscountPopover({ onApplyDiscount }: { onApplyDiscount: (discount: Discount) => void }) {
-    const [type, setType] = useState<'percentage' | 'fixed'>('percentage');
-    const [value, setValue] = useState('');
+function DiscountPopover({ onApplyDiscount, children }: { onApplyDiscount: (discount: Discount) => void, children: React.ReactNode }) {
+    const { selectedBusiness } = useBusiness();
+    const { getDiscountByCode } = useInventory();
+    const { toast } = useToast();
+    const [code, setCode] = useState('');
 
-    const handleApply = () => {
-        const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue <= 0) return;
-
-        onApplyDiscount({ type, value: numValue });
+    const handleApplyCode = () => {
+        const discount = getDiscountByCode(selectedBusiness.id, code.toUpperCase());
+        if(discount) {
+            onApplyDiscount({ code: discount.code, type: discount.type, value: discount.value });
+            toast({ title: "Discount Applied", description: `Successfully applied ${discount.code}.` });
+        } else {
+            toast({ variant: 'destructive', title: "Invalid Code", description: "The discount code is invalid or has expired." });
+        }
     };
 
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                    <Tag className="mr-2 h-4 w-4" />
-                    Add Discount
-                </Button>
+                {children}
             </PopoverTrigger>
             <PopoverContent className="w-64">
                 <div className="grid gap-4">
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Apply Discount</h4>
                         <p className="text-sm text-muted-foreground">
-                            Apply a percentage or fixed amount discount to the sale.
+                            Enter a valid discount code.
                         </p>
                     </div>
                     <div className="grid gap-2">
-                        <div className="grid grid-cols-2 items-center gap-4">
-                            <Label htmlFor="discount-type">Type</Label>
-                             <div className='flex rounded-md bg-muted p-1'>
-                                <Button variant={type === 'percentage' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-7" onClick={() => setType('percentage')}>%</Button>
-                                <Button variant={type === 'fixed' ? 'secondary' : 'ghost'} size="sm" className="flex-1 h-7" onClick={() => setType('fixed')}>$</Button>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 items-center gap-4">
-                            <Label htmlFor="discount-value">Value</Label>
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="discount-code">Code</Label>
                             <Input
-                                id="discount-value"
-                                type="number"
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
-                                placeholder={type === 'percentage' ? "10" : "5.00"}
+                                id="discount-code"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                className="col-span-2 h-8 uppercase"
+                                placeholder="e.g. SAVE15"
                             />
                         </div>
                     </div>
-                    <Button onClick={handleApply}>Apply</Button>
+                    <Button onClick={handleApplyCode}>Apply</Button>
                 </div>
             </PopoverContent>
         </Popover>
@@ -166,7 +165,7 @@ export default function Cart({ cart, customer, discount, onUpdateQuantity, onRem
                      {discount && (
                         <div className="flex justify-between items-center text-primary">
                             <div className='flex items-center gap-2'>
-                                <p>Discount ({discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value.toFixed(2)}`})</p>
+                                <p>Discount ({discount.code ? discount.code : `${discount.value}%`})</p>
                                 <button onClick={onRemoveDiscount}><X className="h-3 w-3" /></button>
                             </div>
                             <p className="font-medium">-${discountAmount.toFixed(2)}</p>
@@ -191,7 +190,14 @@ export default function Cart({ cart, customer, discount, onUpdateQuantity, onRem
                   {customer ? <User className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
                   {customer ? `${customer.firstName} ${customer.lastName}` : 'Add Customer'}
               </Button>
-              {!discount && cart.length > 0 && <DiscountPopover onApplyDiscount={onApplyDiscount} />}
+              {!discount && cart.length > 0 && (
+                 <DiscountPopover onApplyDiscount={onApplyDiscount}>
+                    <Button variant="outline" size="sm" className="w-full">
+                        <Tag className="mr-2 h-4 w-4" />
+                        Apply Discount Code
+                    </Button>
+                 </DiscountPopover>
+              )}
           </div>
           
           <div className="grid grid-cols-2 gap-2 pt-2">
@@ -205,3 +211,5 @@ export default function Cart({ cart, customer, discount, onUpdateQuantity, onRem
     </Card>
   );
 }
+
+    

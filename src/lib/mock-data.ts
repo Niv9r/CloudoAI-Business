@@ -1,9 +1,9 @@
 
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission, DiscountCode } from './types';
 import { PERMISSIONS } from './types';
 
 const allPermissions = new Set(PERMISSIONS);
-const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses']);
+const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts']);
 const cashierPermissions = new Set<Permission>(['process_sales']);
 
 export const mockRoles: Record<string, Role[]> = {
@@ -33,6 +33,7 @@ type MockDb = {
   wholesaleOrders: Record<string, WholesaleOrder[]>;
   employees: Record<string, Employee[]>;
   roles: Record<string, Role[]>;
+  discounts: Record<string, DiscountCode[]>;
 }
 
 export const mockDb: MockDb = {
@@ -69,11 +70,11 @@ export const mockDb: MockDb = {
   },
   sales: {
     biz_1: [
-      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customer: "Olivia Martin", employeeId: "emp_1", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, subtotal: 249.95 },], },
-      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customer: "Jackson Lee", employeeId: "emp_2", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, subtotal: 24.99 }, { productId: "PROD008", name: "Organic Green Tea", quantity: 1, unitPrice: 12.50, subtotal: 12.50 },], },
+      { id: "SALE-00123", timestamp: "2024-05-28T10:00:00Z", customerId: "CUST001", customerName: "Olivia Martin", employeeId: "emp_1", subtotal: 1749.85, tax: 174.99, discount: 0, total: 1924.84, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD005", name: "Designer Sunglasses", quantity: 10, unitPrice: 149.99, costAtTimeOfSale: 65.00, subtotal: 1499.90 }, { productId: "PROD002", name: "Classic Leather Wallet", quantity: 5, unitPrice: 49.99, costAtTimeOfSale: 22.50, subtotal: 249.95 },], },
+      { id: "SALE-00122", timestamp: "2024-05-28T14:30:00Z", customerId: "CUST002", customerName: "Jackson Lee", employeeId: "emp_2", subtotal: 37.49, tax: 3.75, discount: 0, total: 41.24, status: "Completed", payment: "Cash", lineItems: [{ productId: "PROD004", name: "Canvas Tote Bag", quantity: 1, unitPrice: 24.99, costAtTimeOfSale: 11.00, subtotal: 24.99 },], },
     ],
     biz_2: [
-        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customer: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, subtotal: 3.75 }] }
+        { id: "SALE-10001", timestamp: "2024-05-29T12:00:00Z", customerId: null, customerName: "Guest", employeeId: "emp_b2_1", subtotal: 9.25, tax: 0.93, discount: 0, total: 10.18, status: "Completed", payment: "Card", lineItems: [{ productId: "PROD102", name: "Iced Latte", quantity: 1, unitPrice: 5.50, costAtTimeOfSale: 1.20, subtotal: 5.50}, { productId: "PROD103", name: "Croissant", quantity: 1, unitPrice: 3.75, costAtTimeOfSale: 0.80, subtotal: 3.75 }] }
     ],
     biz_3: []
   },
@@ -93,7 +94,7 @@ export const mockDb: MockDb = {
   expenses: {
     biz_1: [
       { id: 'EXP001', vendorId: 'VEND001', invoiceNumber: 'INV-OS-5829', issueDate: '2024-05-15T00:00:00Z', dueDate: '2024-06-14T00:00:00Z', lineItems: [{ id: 'LI-1', description: 'Bulk Leather', amount: 2500.00 }], total: 2500.00, status: 'Paid', notes: 'Paid via CC on 2024-05-20' },
-      { id: 'EXP002', vendorId: 'VEND002', invoiceNumber: 'INV-DS-1050', issueDate: '2024-05-20T00:00:00Z', dueDate: '2024-06-19T00:00:00Z', lineItems: [{ id: 'LI-3', description: 'Silk shipment', amount: 1500.00 }], total: 1500.00, status: 'Pending', },
+      { id: 'EXP002', vendorId: 'VEND002', invoiceNumber: 'INV-DS-1050', issueDate: '2024-04-20T00:00:00Z', dueDate: '2024-05-19T00:00:00Z', lineItems: [{ id: 'LI-3', description: 'Silk shipment', amount: 1500.00 }], total: 1500.00, status: 'Overdue', },
     ],
     biz_2: [],
     biz_3: []
@@ -142,5 +143,16 @@ export const mockDb: MockDb = {
       biz_3: [
         { id: 'emp_b3_1', name: 'Book Nook Admin', email: 'admin@thebooknook.co.uk', pin: '9876', roleId: 'role_admin_b3' },
       ]
+  },
+  discounts: {
+    biz_1: [
+        { id: 'DISC001', code: 'SAVE15', type: 'percentage', value: 15, isActive: true },
+        { id: 'DISC002', code: 'TENOFF', type: 'fixed', value: 10, isActive: true },
+        { id: 'DISC003', code: 'SUMMERFUN', type: 'percentage', value: 20, isActive: false },
+    ],
+    biz_2: [],
+    biz_3: []
   }
 };
+
+    

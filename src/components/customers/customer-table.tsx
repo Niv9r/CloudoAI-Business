@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,9 +20,10 @@ import {
     customers: Customer[];
     onEdit: (customer: Customer) => void;
     onDelete: (customer: Customer) => void;
+    onViewHistory: (customer: Customer) => void;
   }
   
-  export default function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
+  export default function CustomerTable({ customers, onEdit, onDelete, onViewHistory }: CustomerTableProps) {
     return (
       <Card className="h-full w-full flex flex-col">
         <CardHeader>
@@ -67,7 +69,7 @@ import {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => onEdit(customer)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View History</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onViewHistory(customer)}>View History</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onDelete(customer)} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -86,4 +88,5 @@ import {
       </Card>
     );
   }
-  
+
+    
