@@ -60,6 +60,10 @@ export default function AlertsPanel() {
 
     }, [selectedBusiness.id, getProducts, getExpenses, getWholesaleOrders]);
 
+    if (alerts.length === 0) {
+        return null;
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -92,7 +96,4 @@ export default function AlertsPanel() {
             </CardContent>
         </Card>
     )
-
 }
-
-    

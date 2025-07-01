@@ -1,4 +1,3 @@
-
 'use client';
 
 import KpiCard from "@/components/dashboard/kpi-card";
@@ -8,6 +7,7 @@ import SmartReorder from "@/components/dashboard/smart-reorder";
 import TopProductsChart from "@/components/dashboard/top-products-chart";
 import AiCopilot from '@/components/dashboard/ai-copilot';
 import AnomalyAlerts from "@/components/dashboard/anomaly-alerts";
+import AlertsPanel from "@/components/dashboard/alerts-panel";
 import { useBusiness } from '@/context/business-context';
 import { useInventory } from "@/context/inventory-context";
 import { useCustomer } from "@/context/customer-context";
@@ -52,7 +52,8 @@ export default function Home() {
         <p className="text-muted-foreground">Welcome back! Here's a summary of your business.</p>
       </div>
       
-      <div className="w-full">
+      <div className="w-full space-y-8">
+        <AlertsPanel key={`${selectedBusiness.id}-alerts`} />
         <AnomalyAlerts key={`${selectedBusiness.id}-anomalies`} />
       </div>
 
@@ -86,5 +87,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
