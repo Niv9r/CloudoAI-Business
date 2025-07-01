@@ -26,10 +26,14 @@ export const PERMISSIONS = [
 ] as const;
 export type Permission = typeof PERMISSIONS[number];
 
-export type Role = {
+export const roleFormSchema = z.object({
+  name: z.string().min(2, 'Role name must be at least 2 characters.'),
+  permissions: z.set(z.enum(PERMISSIONS)),
+});
+export type RoleFormValues = z.infer<typeof roleFormSchema>;
+
+export type Role = RoleFormValues & {
     id: string;
-    name: string;
-    permissions: Set<Permission>;
 };
 
 export const employeeFormSchema = z.object({

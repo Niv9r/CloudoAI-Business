@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback, useEffect } from 'react';
-import type { Employee, Role, Permission, EmployeeFormValues } from '@/lib/types';
+import type { Employee, Role, Permission, EmployeeFormValues, RoleFormValues } from '@/lib/types';
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from './business-context';
@@ -18,6 +18,9 @@ interface EmployeeContextType {
   updateEmployee: (businessId: string, employee: Employee) => void;
   deleteEmployee: (businessId: string, employeeId: string) => void;
   setCurrentEmployee: (employee: Employee | null) => void;
+  addRole: (businessId: string, data: RoleFormValues) => void;
+  updateRole: (businessId: string, role: Role) => void;
+  deleteRole: (businessId: string, roleId: string) => void;
 }
 
 const EmployeeContext = createContext<EmployeeContextType | undefined>(undefined);
@@ -26,7 +29,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { selectedBusiness } = useBusiness();
   const [allEmployees, setAllEmployees] = useState<Record<string, Employee[]>>(mockDb.employees);
-  const [allRoles] = useState<Record<string, Role[]>>(mockDb.roles);
+  const [allRoles, setAllRoles] = useState<Record<string, Role[]>>(mockDb.roles);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
 
   // Set initial employee when business changes
@@ -93,6 +96,52 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     }
   }, [allEmployees, currentEmployee, toast]);
 
+  const addRole = useCallback((businessId: string, data: RoleFormValues) => {
+    const newRole: Role = {
+      id: `role_${Date.now()}`,
+      ...data,
+    };
+    setAllRoles(prev => ({
+      ...prev,
+      [businessId]: [...(prev[businessId] || []), newRole],
+    }));
+    toast({ title: "Success", description: `Role "${data.name}" created.`});
+  }, [toast]);
+
+  const updateRole = useCallback((businessId: string, updatedRole: Role) => {
+    setAllRoles(prev => ({
+      ...prev,
+      [businessId]: (prev[businessId] || []).map(r => r.id === updatedRole.id ? updatedRole : r),
+    }));
+    toast({ title: "Success", description: `Role "${updatedRole.name}" updated.`});
+  }, [toast]);
+
+  const deleteRole = useCallback((businessId: string, roleId: string) => {
+    const employeesInRole = (allEmployees[businessId] || []).filter(e => e.roleId === roleId);
+    if (employeesInRole.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Cannot Delete Role',
+        description: `This role is currently assigned to ${employeesInRole.length} employee(s). Please reassign them first.`
+      });
+      return;
+    }
+    
+    const roleToDelete = (allRoles[businessId] || []).find(r => r.id === roleId);
+    setAllRoles(prev => ({
+      ...prev,
+      [businessId]: (prev[businessId] || []).filter(r => r.id !== roleId),
+    }));
+    if (roleToDelete) {
+      toast({
+        variant: 'destructive',
+        title: 'Role Deleted',
+        description: `Role "${roleToDelete.name}" has been removed.`,
+      });
+    }
+  }, [allRoles, allEmployees, toast]);
+
+
   const permissions = useMemo(() => {
     if (!currentEmployee) return new Set<Permission>();
     const roles = getRoles(selectedBusiness.id);
@@ -114,7 +163,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     updateEmployee,
     deleteEmployee,
     setCurrentEmployee,
-  }), [employees, roles, currentEmployee, permissions, getEmployees, getRoles, addEmployee, updateEmployee, deleteEmployee]);
+    addRole,
+    updateRole,
+    deleteRole,
+  }), [employees, roles, currentEmployee, permissions, getEmployees, getRoles, addEmployee, updateEmployee, deleteEmployee, addRole, updateRole, deleteRole]);
 
   return (
     <EmployeeContext.Provider value={value}>
