@@ -59,8 +59,8 @@ const MarketResearchOutputSchema = z.object({
   marketSummary: z.string().describe('A markdown-formatted summary of the market research findings, including price ranges, common product names, and overall market positioning.'),
   marketAnalysis: z.array(
     z.object({
-      productName: z.string().describe("The name of the competitor's product or the store name."),
-      price: z.number().describe("The price of the competitor's product."),
+      productName: z.string().describe("The name of the competitor's product or the name of the retail store."),
+      price: z.number().describe("The price of the competitor's product, extracted as a number."),
       url: z.string().url().describe("The direct URL to the competitor's product page."),
     })
   ).describe('A comprehensive list of all relevant products found during the market research.'),
@@ -74,7 +74,7 @@ const marketResearchFlow = ai.defineFlow(
     name: 'marketResearchFlow',
     inputSchema: MarketResearchInputSchema,
     outputSchema: MarketResearchOutputSchema,
-    model: 'googleai/gemini-2.0-flash',
+    model: 'googleai/gemini-2.5-flash-preview',
   },
   async (input) => {
     const prompt = ai.definePrompt({
