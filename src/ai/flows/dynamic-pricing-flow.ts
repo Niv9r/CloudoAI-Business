@@ -90,10 +90,10 @@ Product to analyze:
 - Our Current Price: £{{{currentPrice}}}
 
 Instructions:
-1.  Use the googleSearchTool to search for similar products available for sale in the UK. Use multiple search queries like "{{{productName}}} price uk", "buy {{{productCategory}}} uk", and similar variations to gather broad data.
+1.  Use the googleSearchTool to search for the same or very similar products available for sale in the UK. Use multiple search queries like "{{{productName}}} price uk", "buy {{{productCategory}}} uk", and similar variations to gather broad data.
 2.  Analyze all search results to identify as many relevant competitors and their prices as possible. Extract the price as a number from the search result snippet or title.
 3.  Provide a concise 'marketSummary' in markdown. This summary should synthesize your findings, mentioning the general price range you discovered, any noticeable market tiers (e.g., budget, mid-range, premium), and how our current price fits into this landscape.
-4.  Compile a comprehensive 'marketAnalysis' list of all the competitor products you found. For each, include the product/store name, its price, and the direct URL from the search result.
+4.  Compile a comprehensive 'marketAnalysis' list of all the competitor products you found. For each, include the product/store name, its price, and the direct URL from the search result. Ensure the URL is a direct link to the product if possible.
 `,
     });
     
