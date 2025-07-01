@@ -644,6 +644,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const addDiscountCode = useCallback((businessId: string, data: DiscountCodeFormValues) => {
     const newDiscount: DiscountCode = {
         id: `DISC${Date.now()}`,
+        code: data.code.toUpperCase(),
         ...data,
     };
     setDb(prevDb => ({
@@ -661,7 +662,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         ...prevDb,
         discounts: {
             ...prevDb.discounts,
-            [businessId]: (prevDb.discounts[businessId] || []).map(d => d.id === updatedDiscount.id ? updatedDiscount : d)
+            [businessId]: (prevDb.discounts[businessId] || []).map(d => d.id === updatedDiscount.id ? {...updatedDiscount, code: updatedDiscount.code.toUpperCase()} : d)
         }
     }));
     toast({ title: "Success", description: "Discount code updated successfully." });
