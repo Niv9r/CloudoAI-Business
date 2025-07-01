@@ -9,5 +9,6 @@ import '@/ai/flows/suggest-reorder-flow.ts';
 import '@/ai/flows/business-copilot-flow.ts';
 import '@/ai/flows/generate-business-insights-flow.ts';
 import '@/ai/flows/detect-anomalies-flow.ts';
-
+import '@/ai/flows/financial-analyst-flow.ts';
+import '@/ai/flows/expense-ocr-flow.ts';
     

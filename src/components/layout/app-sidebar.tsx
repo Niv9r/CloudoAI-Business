@@ -34,6 +34,9 @@ import {
   Clock,
   DollarSign,
   ShieldCheck,
+  BrainCircuit,
+  FileText,
+  BookUser,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usePathname } from 'next/navigation';
@@ -42,7 +45,8 @@ import { useEmployee } from '@/context/employee-context';
 
 const navConfig = [
   { type: 'link' as const, href: '/', label: 'Dashboard', icon: LayoutDashboard, permission: 'view_reports' },
-  { type: 'link' as const, href: '/insights', label: 'Insights', icon: Lightbulb, permission: 'view_reports' },
+  { type: 'link' as const, href: '/insights', label: 'AI Insights', icon: Lightbulb, permission: 'view_reports' },
+  { type: 'link' as const, href: '/financial-analyst', label: 'AI Analyst', icon: BrainCircuit, permission: 'view_reports' },
   { type: 'link' as const, href: '/pos', label: 'POS', icon: Tablet, permission: 'process_sales' },
   {
     type: 'group' as const,
@@ -77,6 +81,7 @@ const navConfig = [
     subItems: [
       { href: '/expenses', label: 'Expenses', permission: 'manage_expenses' },
       { href: '/reports', label: 'Reports', permission: 'view_reports' },
+      { href: '/reports/general-ledger', label: 'General Ledger', permission: 'view_reports' },
     ],
   },
   {
@@ -89,7 +94,16 @@ const navConfig = [
       { href: '/timesheets', label: 'Timesheets', permission: 'view_timesheets' },
       { href: '/payroll', label: 'Payroll', permission: 'view_payroll' },
       { href: '/audit-log', label: 'Audit Log', permission: 'view_audit_log' },
+    ],
+  },
+  {
+    type: 'group' as const,
+    label: 'Settings',
+    icon: Settings,
+    permission: 'access_settings',
+    subItems: [
       { href: '/settings', label: 'Business Settings', permission: 'access_settings' },
+      { href: '/settings/accounts', label: 'Chart of Accounts', permission: 'manage_chart_of_accounts' },
     ],
   }
 ];
@@ -167,11 +181,11 @@ export default function AppSidebar() {
                             .filter(subItem => permissions.has(subItem.permission))
                             .map(subItem => (
                               <SidebarMenuSubItem key={subItem.href}>
-                                <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
-                                  <Link href={subItem.href}>
-                                        {subItem.label}
-                                  </Link>
-                                </SidebarMenuSubButton>
+                                <Link href={subItem.href} passHref legacyBehavior>
+                                    <SidebarMenuSubButton as="a" isActive={pathname.startsWith(subItem.href)}>
+                                            {subItem.label}
+                                    </SidebarMenuSubButton>
+                                </Link>
                               </SidebarMenuSubItem>
                           ))}
                       </SidebarMenuSub>
@@ -204,5 +218,3 @@ export default function AppSidebar() {
     </Sidebar>
   );
 }
-
-    

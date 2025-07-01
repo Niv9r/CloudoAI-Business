@@ -12,22 +12,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { subDays, format, intervalToDuration } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, PlusCircle, CheckCircle } from 'lucide-react';
+import type { Shift, ShiftFormValues } from '@/lib/types';
+import ManualShiftDialog from '@/components/timesheets/manual-shift-dialog';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TimesheetsPage() {
     const { selectedBusiness } = useBusiness();
-    const { getShifts } = useInventory();
-    const { getEmployees } = useEmployee();
-
-    const employees = getEmployees(selectedBusiness.id);
+    const { getShifts, addManualShift, approveShift } = useInventory();
+    const { employees, permissions } = useEmployee();
+    const { toast } = useToast();
+    
     const shifts = getShifts(selectedBusiness.id);
     
     const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subDays(new Date(), 7), to: new Date() });
     const [selectedEmployee, setSelectedEmployee] = useState('all');
+    const [isManualShiftOpen, setIsManualShiftOpen] = useState(false);
     
     const filteredShifts = useMemo(() => {
         return shifts
-            .filter(shift => shift.status === 'reconciled' && shift.endTime)
+            .filter(shift => shift.endTime)
             .filter(shift => {
                 const shiftDate = new Date(shift.startTime);
                 return !dateRange || (
@@ -40,10 +45,12 @@ export default function TimesheetsPage() {
     }, [shifts, dateRange, selectedEmployee]);
 
     const totalHours = useMemo(() => {
-        const totalSeconds = filteredShifts.reduce((acc, shift) => {
+        const approvedShifts = filteredShifts.filter(s => s.status === 'approved');
+        const totalSeconds = approvedShifts.reduce((acc, shift) => {
             if (!shift.endTime) return acc;
             const duration = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
-            return acc + (duration / 1000);
+            const breakSeconds = ((shift.unpaidBreakMinutes || 0) * 60);
+            return acc + (duration / 1000) - breakSeconds;
         }, 0);
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -52,20 +59,45 @@ export default function TimesheetsPage() {
     
     const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown';
     
-    const formatDuration = (start: string, end: string) => {
-        const duration = intervalToDuration({ start: new Date(start), end: new Date(end) });
+    const formatDuration = (shift: Shift) => {
+        if (!shift.endTime) return 'N/A';
+        const duration = intervalToDuration({ start: new Date(shift.startTime), end: new Date(shift.endTime) });
         return `${duration.hours || 0}h ${duration.minutes || 0}m`;
     };
 
     const hasActiveFilters = dateRange !== undefined || selectedEmployee !== 'all';
     
+    const handleSaveManualShift = (data: ShiftFormValues) => {
+        addManualShift(selectedBusiness.id, data);
+        setIsManualShiftOpen(false);
+    };
+
+    const handleApproveShift = (shiftId: string) => {
+        approveShift(selectedBusiness.id, shiftId);
+        toast({ title: 'Shift Approved', description: 'The shift has been approved and can now be included in payroll.' });
+    };
+
+    const getBadgeVariant = (status: Shift['status']): 'default' | 'secondary' | 'outline' => {
+        switch (status) {
+            case 'approved': return 'default';
+            case 'pending_approval': return 'secondary';
+            default: return 'outline';
+        }
+    }
+
     return (
         <div className="flex h-full w-full flex-col gap-4">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <h1 className="text-3xl font-bold font-headline tracking-tight">Timesheets</h1>
-                    <p className="text-muted-foreground">Review employee hours from reconciled shifts.</p>
+                    <p className="text-muted-foreground">Review and approve employee hours from reconciled shifts.</p>
                 </div>
+                {permissions.has('approve_timesheets') && (
+                     <Button onClick={() => setIsManualShiftOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Manual Entry
+                    </Button>
+                )}
             </div>
             
             <Card>
@@ -90,7 +122,7 @@ export default function TimesheetsPage() {
                             </Button>
                         )}
                         <div className="md:ml-auto text-center md:text-right">
-                            <p className="text-sm text-muted-foreground">Total Hours</p>
+                            <p className="text-sm text-muted-foreground">Total Approved Hours</p>
                             <p className="text-2xl font-bold">{totalHours.hours}h {totalHours.minutes}m</p>
                         </div>
                     </div>
@@ -101,9 +133,10 @@ export default function TimesheetsPage() {
                             <TableRow>
                                 <TableHead>Employee</TableHead>
                                 <TableHead>Date</TableHead>
-                                <TableHead>Clock In</TableHead>
-                                <TableHead>Clock Out</TableHead>
-                                <TableHead className="text-right">Duration</TableHead>
+                                <TableHead>Clock In/Out</TableHead>
+                                <TableHead className="text-center">Duration</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -111,13 +144,21 @@ export default function TimesheetsPage() {
                                 <TableRow key={shift.id}>
                                     <TableCell className="font-medium">{getEmployeeName(shift.employeeId)}</TableCell>
                                     <TableCell>{format(new Date(shift.startTime), 'PPP')}</TableCell>
-                                    <TableCell>{format(new Date(shift.startTime), 'p')}</TableCell>
-                                    <TableCell>{shift.endTime ? format(new Date(shift.endTime), 'p') : 'N/A'}</TableCell>
-                                    <TableCell className="text-right">{shift.endTime ? formatDuration(shift.startTime, shift.endTime) : 'N/A'}</TableCell>
+                                    <TableCell>{`${format(new Date(shift.startTime), 'p')} - ${shift.endTime ? format(new Date(shift.endTime), 'p') : 'N/A'}`}</TableCell>
+                                    <TableCell className="text-center">{formatDuration(shift)}</TableCell>
+                                    <TableCell><Badge variant={getBadgeVariant(shift.status)}>{shift.status.replace('_', ' ')}</Badge></TableCell>
+                                    <TableCell className="text-right">
+                                        {shift.status === 'pending_approval' && permissions.has('approve_timesheets') && (
+                                            <Button size="sm" variant="outline" onClick={() => handleApproveShift(shift.id)}>
+                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                Approve
+                                            </Button>
+                                        )}
+                                    </TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={6} className="h-24 text-center">
                                         No reconciled shifts found for the selected criteria.
                                     </TableCell>
                                 </TableRow>
@@ -126,7 +167,12 @@ export default function TimesheetsPage() {
                     </Table>
                 </CardContent>
             </Card>
+            <ManualShiftDialog 
+                isOpen={isManualShiftOpen}
+                onOpenChange={setIsManualShiftOpen}
+                onSave={handleSaveManualShift}
+                employees={employees}
+            />
         </div>
     );
 }
-
