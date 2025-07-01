@@ -1,9 +1,9 @@
 
-import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission, DiscountCode, AuditLog } from './types';
+import type { Product, Customer, Sale, Vendor, Expense, PurchaseOrder, StockAdjustment, Shift, WholesaleOrder, Role, Employee, Permission, DiscountCode, AuditLog, ChartOfAccount, GeneralLedgerEntry, PayrollRun } from './types';
 import { PERMISSIONS } from './types';
 
 const allPermissions = new Set(PERMISSIONS);
-const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts', 'view_timesheets', 'view_payroll', 'view_audit_log', 'build_custom_reports']);
+const managerPermissions = new Set<Permission>(['view_reports', 'manage_inventory', 'process_sales', 'process_refunds', 'manage_expenses', 'manage_discounts', 'view_timesheets', 'approve_timesheets', 'view_payroll', 'view_audit_log', 'build_custom_reports', 'manage_chart_of_accounts']);
 const cashierPermissions = new Set<Permission>(['process_sales']);
 
 export const mockRoles: Record<string, Role[]> = {
@@ -35,6 +35,9 @@ type MockDb = {
   roles: Record<string, Role[]>;
   discounts: Record<string, DiscountCode[]>;
   auditLog: Record<string, AuditLog[]>;
+  chartOfAccounts: Record<string, ChartOfAccount[]>;
+  generalLedger: Record<string, GeneralLedgerEntry[]>;
+  payrollRuns: Record<string, PayrollRun[]>;
 }
 
 export const mockDb: MockDb = {
@@ -116,12 +119,12 @@ export const mockDb: MockDb = {
   },
   shifts: {
     biz_1: [
-      { id: 'SHIFT-2024-05-28', employeeId: 'emp_2', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'reconciled' },
-      { id: 'SHIFT-2024-05-29', employeeId: 'emp_3', startTime: '2024-05-29T09:00:00Z', endTime: '2024-05-29T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 150.00, cashSales: 0.00, cardSales: 0, totalSales: 0, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-28', employeeId: 'emp_2', startTime: '2024-05-28T09:00:00Z', endTime: '2024-05-28T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 191.24, cashSales: 41.24, cardSales: 1749.85, totalSales: 1791.09, discrepancy: 0, status: 'approved', unpaidBreakMinutes: 30 },
+      { id: 'SHIFT-2024-05-29', employeeId: 'emp_3', startTime: '2024-05-29T09:00:00Z', endTime: '2024-05-29T17:00:00Z', startingCashFloat: 150.00, endingCashFloat: 150.00, cashSales: 0.00, cardSales: 0, totalSales: 0, discrepancy: 0, status: 'pending_approval' },
 
     ],
     biz_2: [
-      { id: 'SHIFT-2024-05-29-B2', employeeId: 'emp_b2_1', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'reconciled' },
+      { id: 'SHIFT-2024-05-29-B2', employeeId: 'emp_b2_1', startTime: '2024-05-29T08:00:00Z', endTime: '2024-05-29T16:00:00Z', startingCashFloat: 200.00, endingCashFloat: 200, cashSales: 0, cardSales: 10.18, totalSales: 10.18, discrepancy: 0, status: 'approved' },
     ],
     biz_3: []
   },
@@ -164,6 +167,32 @@ export const mockDb: MockDb = {
     ],
     biz_2: [],
     biz_3: []
+  },
+  chartOfAccounts: {
+    biz_1: [
+      { id: 'acct_cash', accountNumber: '1010', accountName: 'Cash', accountType: 'Asset' },
+      { id: 'acct_ar', accountNumber: '1200', accountName: 'Accounts Receivable', accountType: 'Asset' },
+      { id: 'acct_inventory', accountNumber: '1400', accountName: 'Inventory', accountType: 'Asset' },
+      { id: 'acct_ap', accountNumber: '2000', accountName: 'Accounts Payable', accountType: 'Liability' },
+      { id: 'acct_sales', accountNumber: '4000', accountName: 'Sales Revenue', accountType: 'Revenue' },
+      { id: 'acct_cogs', accountNumber: '5000', accountName: 'Cost of Goods Sold', accountType: 'Expense' },
+      { id: 'acct_rent', accountNumber: '6010', accountName: 'Rent Expense', accountType: 'Expense' },
+    ],
+    biz_2: [],
+    biz_3: []
+  },
+  generalLedger: {
+    biz_1: [
+      { id: 'gl_1', date: '2024-05-28T10:00:00Z', accountId: 'acct_cash', description: 'Sale #SALE-00123', debit: 1924.84 },
+      { id: 'gl_2', date: '2024-05-28T10:00:00Z', accountId: 'acct_sales', description: 'Sale #SALE-00123', credit: 1924.84 },
+    ],
+    biz_2: [],
+    biz_3: []
+  },
+  payrollRuns: {
+      biz_1: [],
+      biz_2: [],
+      biz_3: [],
   }
 };
 

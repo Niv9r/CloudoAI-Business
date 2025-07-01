@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, useMemo, type ReactNode, useCallback } from 'react';
-import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift, SaleLineItem, WholesaleOrder, WholesaleOrderFormValues, WholesaleOrderLineItem, DiscountCode, DiscountCodeFormValues } from '@/lib/types';
+import type { Product, ProductFormValues, PurchaseOrder, PurchaseOrderFormValues, Vendor, VendorFormValues, StockAdjustment, StockAdjustmentFormValues, Expense, ExpenseFormValues, Sale, Shift, SaleLineItem, WholesaleOrder, WholesaleOrderFormValues, WholesaleOrderLineItem, DiscountCode, DiscountCodeFormValues, GeneralLedgerEntry, ChartOfAccount, ChartOfAccountFormValues, ShiftFormValues, PayrollRun, PayrollData } from '@/lib/types';
 import { mockDb } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -20,6 +20,10 @@ interface InventoryContextType {
   getWholesaleOrders: (businessId: string) => WholesaleOrder[];
   getDiscountCodes: (businessId: string) => DiscountCode[];
   getDiscountByCode: (businessId: string, code: string) => DiscountCode | undefined;
+  getGeneralLedger: (businessId: string) => GeneralLedgerEntry[];
+  getChartOfAccounts: (businessId: string) => ChartOfAccount[];
+  getPayrollRuns: (businessId: string) => PayrollRun[];
+  getEmployees: (businessId: string) => Employee[]; // Re-exposing from employee context for internal use
   
   addProduct: (businessId: string, data: ProductFormValues) => void;
   updateProduct: (businessId: string, product: Product) => void;
@@ -58,6 +62,14 @@ interface InventoryContextType {
   addDiscountCode: (businessId: string, data: DiscountCodeFormValues) => void;
   updateDiscountCode: (businessId: string, discount: DiscountCode) => void;
   deleteDiscountCode: (businessId: string, discountId: string) => void;
+  
+  addChartOfAccount: (businessId: string, data: ChartOfAccountFormValues) => void;
+  updateChartOfAccount: (businessId: string, account: ChartOfAccount) => void;
+  deleteChartOfAccount: (businessId: string, accountId: string) => void;
+
+  addManualShift: (businessId: string, data: ShiftFormValues) => void;
+  approveShift: (businessId: string, shiftId: string) => void;
+  finalizePayroll: (businessId: string, periodStart: Date, periodEnd: Date, payrollData: PayrollData[]) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -65,7 +77,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { logAction } = useAudit();
-  const { currentEmployee } = useEmployee();
+  const { currentEmployee, getEmployees } = useEmployee();
   const [db, setDb] = useState(mockDb);
 
   const getStatusFromStock = (stock: number): Product['status'] => {
@@ -83,6 +95,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const getShifts = useCallback((businessId: string) => db.shifts[businessId] || [], [db.shifts]);
   const getWholesaleOrders = useCallback((businessId: string) => db.wholesaleOrders[businessId] || [], [db.wholesaleOrders]);
   const getDiscountCodes = useCallback((businessId: string) => db.discounts[businessId] || [], [db.discounts]);
+  const getChartOfAccounts = useCallback((businessId: string) => db.chartOfAccounts[businessId] || [], [db.chartOfAccounts]);
+  const getGeneralLedger = useCallback((businessId: string) => db.generalLedger[businessId] || [], [db.generalLedger]);
+  const getPayrollRuns = useCallback((businessId: string) => db.payrollRuns[businessId] || [], [db.payrollRuns]);
   
   const getDiscountByCode = useCallback((businessId: string, code: string) => {
     const businessDiscounts = db.discounts[businessId] || [];
@@ -203,7 +218,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     setDb(prevDb => {
         const newDb = {...prevDb};
         
-        // Update PO
         const poToUpdate = (newDb.purchaseOrders[businessId] || []).find(p => p.id === poId);
         if (poToUpdate) {
             const updatedLineItems = poToUpdate.lineItems.map(li => {
@@ -219,7 +233,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             newDb.purchaseOrders[businessId] = (newDb.purchaseOrders[businessId] || []).map(p => p.id === poId ? updatedPO : p);
         }
 
-        // Update Products
         const businessProducts = newDb.products[businessId] || [];
         newDb.products[businessId] = businessProducts.map(prod => {
             const receivedItem = receivedItems.find(ri => ri.productId === prod.id);
@@ -306,7 +319,6 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         const updatedLineItems = saleToUpdate.lineItems.map((li: SaleLineItem) => {
             const itemToRefund = itemsToRefund.find(itr => itr.productId === li.productId);
             if (itemToRefund) {
-                // Ensure we don't refund more than what was bought.
                 const alreadyRefunded = li.refundedQuantity || 0;
                 const maxRefundable = li.quantity - alreadyRefunded;
                 const quantityToRefund = Math.min(itemToRefund.quantity, maxRefundable);
@@ -486,7 +498,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         const updatedShift: Shift = {
             ...shiftToUpdate,
             endTime: new Date().toISOString(),
-            status: 'reconciled',
+            status: 'pending_approval',
             endingCashFloat: actualCash,
             cashSales,
             cardSales,
@@ -711,6 +723,105 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     }
   }, [db.discounts, toast, logAction, currentEmployee]);
 
+  // Chart of Accounts
+  const addChartOfAccount = useCallback((businessId: string, data: ChartOfAccountFormValues) => {
+    const newAccount: ChartOfAccount = {
+      id: `acct_${Date.now()}`,
+      ...data,
+    };
+    setDb(prevDb => ({
+      ...prevDb,
+      chartOfAccounts: {
+        ...prevDb.chartOfAccounts,
+        [businessId]: [...(prevDb.chartOfAccounts[businessId] || []), newAccount],
+      },
+    }));
+    logAction(businessId, currentEmployee, 'account.create', `Created account: ${data.accountName}`);
+    toast({ title: 'Success', description: 'Account added successfully.' });
+  }, [toast, logAction, currentEmployee]);
+
+  const updateChartOfAccount = useCallback((businessId: string, updatedAccount: ChartOfAccount) => {
+    setDb(prevDb => ({
+      ...prevDb,
+      chartOfAccounts: {
+        ...prevDb.chartOfAccounts,
+        [businessId]: (prevDb.chartOfAccounts[businessId] || []).map(a => a.id === updatedAccount.id ? updatedAccount : a),
+      },
+    }));
+    logAction(businessId, currentEmployee, 'account.update', `Updated account: ${updatedAccount.accountName}`);
+    toast({ title: 'Success', description: 'Account updated successfully.' });
+  }, [toast, logAction, currentEmployee]);
+
+  const deleteChartOfAccount = useCallback((businessId: string, accountId: string) => {
+    const accountToDelete = (db.chartOfAccounts[businessId] || []).find(a => a.id === accountId);
+    setDb(prevDb => ({
+      ...prevDb,
+      chartOfAccounts: {
+        ...prevDb.chartOfAccounts,
+        [businessId]: (prevDb.chartOfAccounts[businessId] || []).filter(a => a.id !== accountId),
+      },
+    }));
+    if (accountToDelete) {
+      logAction(businessId, currentEmployee, 'account.delete', `Deleted account: ${accountToDelete.accountName}`);
+      toast({
+        variant: 'destructive',
+        title: 'Account Deleted',
+        description: `"${accountToDelete.accountName}" has been removed.`,
+      });
+    }
+  }, [db.chartOfAccounts, toast, logAction, currentEmployee]);
+
+  // Timesheets & Payroll
+  const addManualShift = useCallback((businessId: string, data: ShiftFormValues) => {
+    const newShift: Shift = {
+        id: `SHIFT-MANUAL-${Date.now()}`,
+        ...data,
+        startTime: new Date(data.startTime).toISOString(),
+        endTime: new Date(data.endTime).toISOString(),
+        startingCashFloat: 0,
+        status: 'pending_approval',
+    };
+    setDb(prevDb => ({
+        ...prevDb,
+        shifts: {
+            ...prevDb.shifts,
+            [businessId]: [newShift, ...(prevDb.shifts[businessId] || [])],
+        },
+    }));
+    logAction(businessId, currentEmployee, 'shift.manual_create', `Manually created shift for employee ${data.employeeId}`);
+    toast({ title: 'Success', description: 'Manual shift entry added for approval.' });
+  }, [toast, logAction, currentEmployee]);
+  
+  const approveShift = useCallback((businessId: string, shiftId: string) => {
+    setDb(prevDb => ({
+        ...prevDb,
+        shifts: {
+            ...prevDb.shifts,
+            [businessId]: (prevDb.shifts[businessId] || []).map(s => s.id === shiftId ? { ...s, status: 'approved' } : s),
+        },
+    }));
+    logAction(businessId, currentEmployee, 'shift.approve', `Approved shift ${shiftId}`);
+  }, [logAction, currentEmployee]);
+
+  const finalizePayroll = useCallback((businessId: string, periodStart: Date, periodEnd: Date, payrollData: PayrollData[]) => {
+    const newPayrollRun: PayrollRun = {
+        id: `PAYROLL-${Date.now()}`,
+        periodStart: periodStart.toISOString(),
+        periodEnd: periodEnd.toISOString(),
+        finalizedDate: new Date().toISOString(),
+        payrollData,
+    };
+    setDb(prevDb => ({
+        ...prevDb,
+        payrollRuns: {
+            ...prevDb.payrollRuns,
+            [businessId]: [newPayrollRun, ...(prevDb.payrollRuns[businessId] || [])],
+        },
+    }));
+    logAction(businessId, currentEmployee, 'payroll.finalize', `Finalized payroll for period ${format(periodStart, 'P')} - ${format(periodEnd, 'P')}`);
+    toast({ title: "Payroll Finalized", description: "The payroll run has been recorded." });
+  }, [toast, logAction, currentEmployee]);
+
 
   const value = useMemo(() => ({
     getProducts,
@@ -723,6 +834,10 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     getWholesaleOrders,
     getDiscountCodes,
     getDiscountByCode,
+    getGeneralLedger,
+    getChartOfAccounts,
+    getPayrollRuns,
+    getEmployees,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -752,14 +867,22 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     addDiscountCode,
     updateDiscountCode,
     deleteDiscountCode,
+    addChartOfAccount,
+    updateChartOfAccount,
+    deleteChartOfAccount,
+    addManualShift,
+    approveShift,
+    finalizePayroll
   }), [
     db, 
-    getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts, getWholesaleOrders, getDiscountCodes, getDiscountByCode,
+    getProducts, getPurchaseOrders, getVendors, getStockAdjustments, getSales, getExpenses, getShifts, getWholesaleOrders, getDiscountCodes, getDiscountByCode, getGeneralLedger, getChartOfAccounts, getPayrollRuns, getEmployees,
     addProduct, updateProduct, deleteProduct, addPurchaseOrder, updatePurchaseOrder, issuePurchaseOrder, cancelPurchaseOrder, receiveStock, adjustStock,
     addSale, processRefund, addExpense, updateExpense, deleteExpense, markExpenseAsPaid, addShift, endShift,
     addVendor, updateVendor, deleteVendor,
     addWholesaleOrder, updateWholesaleOrder, confirmWholesaleOrder, markWholesaleOrderPaid, shipWholesaleOrder, cancelWholesaleOrder,
     addDiscountCode, updateDiscountCode, deleteDiscountCode,
+    addChartOfAccount, updateChartOfAccount, deleteChartOfAccount,
+    addManualShift, approveShift, finalizePayroll
   ]);
 
   return (
@@ -776,5 +899,3 @@ export function useInventory() {
   }
   return context;
 }
-
-    

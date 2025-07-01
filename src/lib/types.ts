@@ -25,9 +25,11 @@ export const PERMISSIONS = [
     'manage_wholesale_orders',
     'manage_discounts',
     'view_timesheets',
+    'approve_timesheets',
     'view_payroll',
     'view_audit_log',
     'build_custom_reports',
+    'manage_chart_of_accounts',
 ] as const;
 export type Permission = typeof PERMISSIONS[number];
 
@@ -143,12 +145,14 @@ export type Shift = {
     endTime?: string;
     startingCashFloat: number;
     endingCashFloat?: number;
-    status: 'open' | 'closed' | 'reconciled';
+    status: 'open' | 'reconciled' | 'pending_approval' | 'approved';
     notes?: string;
     cashSales?: number;
     cardSales?: number;
     totalSales?: number;
     discrepancy?: number;
+    paidBreakMinutes?: number;
+    unpaidBreakMinutes?: number;
 };
 
 // --- Customer Management ---
@@ -339,6 +343,59 @@ export type AuditLog = {
     details: string; 
 };
 
+// --- Timesheets & Payroll ---
+export const shiftFormSchema = z.object({
+    employeeId: z.string().min(1, 'Employee is required.'),
+    startTime: z.string().min(1, 'Start time is required.'),
+    endTime: z.string().min(1, 'End time is required.'),
+    paidBreakMinutes: z.coerce.number().int().min(0).default(0),
+    unpaidBreakMinutes: z.coerce.number().int().min(0).default(0),
+    notes: z.string().min(1, 'Notes are required for manual entries.'),
+});
+export type ShiftFormValues = z.infer<typeof shiftFormSchema>;
+
+export type PayrollData = {
+    employeeId: string;
+    employeeName: string;
+    totalHours: number;
+    hourlyRate: number;
+    basePay: number;
+    totalSales: number;
+    commissionRate: number;
+    commissionPay: number;
+    totalPay: number;
+}
+export type PayrollRun = {
+    id: string;
+    periodStart: string; // ISO
+    periodEnd: string; // ISO
+    finalizedDate: string; // ISO
+    payrollData: PayrollData[];
+}
+
+// --- Accounting & Financials ---
+export const accountTypes = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'] as const;
+export type AccountType = (typeof accountTypes)[number];
+
+export const chartOfAccountFormSchema = z.object({
+  accountNumber: z.string().min(1, 'Account number is required.'),
+  accountName: z.string().min(2, 'Account name must be at least 2 characters.'),
+  accountType: z.enum(accountTypes),
+});
+export type ChartOfAccountFormValues = z.infer<typeof chartOfAccountFormSchema>;
+
+export type ChartOfAccount = ChartOfAccountFormValues & {
+    id: string;
+};
+
+export type GeneralLedgerEntry = {
+    id: string;
+    date: string; // ISO String
+    accountId: string;
+    description: string;
+    debit?: number;
+    credit?: number;
+};
 
 // New Types for AI Features
 
