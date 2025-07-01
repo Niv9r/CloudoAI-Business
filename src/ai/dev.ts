@@ -12,4 +12,5 @@ import '@/ai/flows/detect-anomalies-flow.ts';
 import '@/ai/flows/financial-analyst-flow.ts';
 import '@/ai/flows/expense-ocr-flow.ts';
 import '@/ai/flows/dynamic-pricing-flow.ts';
+import '@/ai/flows/explain-financials-flow.ts';
     

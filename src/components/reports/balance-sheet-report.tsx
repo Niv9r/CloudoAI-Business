@@ -1,12 +1,38 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import type { DateRange } from 'react-day-picker';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useInventory } from '@/context/inventory-context';
 import { useBusiness } from '@/context/business-context';
+import { handleExplainFinancials } from '@/ai/flows/explain-financials-flow';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Button } from '../ui/button';
+import { BrainCircuit, Loader2, AlertCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button variant="outline" size="sm" type="submit" disabled={pending}>
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Analyzing...
+        </>
+      ) : (
+        <>
+          <BrainCircuit className="mr-2 h-4 w-4" />
+          Explain this Report
+        </>
+      )}
+    </Button>
+  );
+}
 
 interface BalanceSheetReportProps {
   dateRange: DateRange | undefined;
@@ -16,11 +42,13 @@ export default function BalanceSheetReport({ dateRange }: BalanceSheetReportProp
   const { selectedBusiness } = useBusiness();
   const { getProducts, getWholesaleOrders, getExpenses } = useInventory();
   
+  const [state, formAction] = useActionState(handleExplainFinancials, { explanation: undefined, error: undefined });
+
   const allProducts = getProducts(selectedBusiness.id);
   const allWholesaleOrders = getWholesaleOrders(selectedBusiness.id);
   const allExpenses = getExpenses(selectedBusiness.id);
 
-  const { assets, liabilities, equity } = useMemo(() => {
+  const reportData = useMemo(() => {
     // This is a simplified, non-GAAP balance sheet for demonstration purposes.
     // A real balance sheet would require a much more complex data model.
 
@@ -56,17 +84,42 @@ export default function BalanceSheetReport({ dateRange }: BalanceSheetReportProp
     };
   }, [allProducts, allWholesaleOrders, allExpenses]);
 
+  const { assets, liabilities, equity } = reportData;
+
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
   };
   
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Balance Sheet (Simplified)</CardTitle>
-        <CardDescription>A snapshot of your business's financial position.</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+            <CardTitle>Balance Sheet (Simplified)</CardTitle>
+            <CardDescription>A snapshot of your business's financial position.</CardDescription>
+        </div>
+        <form action={formAction}>
+            <input type="hidden" name="reportName" value="Balance Sheet" />
+            <input type="hidden" name="reportData" value={JSON.stringify(reportData)} />
+            <SubmitButton />
+        </form>
       </CardHeader>
       <CardContent className="space-y-4">
+        {state.explanation && (
+            <Alert>
+                <BrainCircuit className="h-4 w-4" />
+                <AlertTitle>AI Financial Analyst</AlertTitle>
+                <AlertDescription className="prose prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{state.explanation}</ReactMarkdown>
+                </AlertDescription>
+            </Alert>
+        )}
+        {state.error && (
+            <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Analysis Failed</AlertTitle>
+                <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+        )}
         <Table>
             <TableBody>
                 {/* Assets */}
@@ -126,5 +179,3 @@ export default function BalanceSheetReport({ dateRange }: BalanceSheetReportProp
     </Card>
   );
 }
-
-    
